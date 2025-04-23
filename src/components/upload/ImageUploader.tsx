@@ -1,20 +1,15 @@
-
 import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Image, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useFont, FontChoice } from "@/contexts/FontContext";
-import { analyzeHandwriting, generateAnalysisId } from "@/utils/handwritingAnalysis";
-import { saveAnalysisRecord } from "@/utils/storageService";
+import { useFont } from "@/contexts/FontContext";
+import { analyzeHandwriting } from "@/utils/handwritingAnalysis";
+import { uploadImage } from "@/utils/supabaseStorage";
+import { saveAnalysisResult } from "@/utils/analysisService";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ComparisonType = "font" | "image";
 
@@ -22,6 +17,7 @@ export default function ImageUploader() {
   const { toast } = useToast();
   const { font, fontName } = useFont();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -33,7 +29,6 @@ export default function ImageUploader() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const comparisonFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle file drop
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -44,7 +39,6 @@ export default function ImageUploader() {
     }
   }, []);
 
-  // Handle file input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     
@@ -53,7 +47,7 @@ export default function ImageUploader() {
     }
   };
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
@@ -73,30 +67,26 @@ export default function ImageUploader() {
     }
 
     setIsUploading(true);
-    const reader = new FileReader();
-    
-    reader.onloadend = () => {
-      setUploadedImage(reader.result as string);
-      setIsUploading(false);
+    try {
+      const imageUrl = await uploadImage(file);
+      setUploadedImage(imageUrl);
       toast({
         title: "Image uploaded",
         description: "Your handwriting image has been uploaded successfully.",
       });
-    };
-
-    reader.onerror = () => {
-      setIsUploading(false);
+    } catch (error) {
+      console.error('Upload error:', error);
       toast({
         title: "Upload failed",
         description: "There was a problem uploading your image.",
         variant: "destructive",
       });
-    };
-
-    reader.readAsDataURL(file);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleComparisonFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleComparisonFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     
     if (e.target.files && e.target.files.length > 0) {
@@ -110,33 +100,21 @@ export default function ImageUploader() {
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please upload an image smaller than 5MB.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setComparisonImage(reader.result as string);
+      try {
+        const imageUrl = await uploadImage(file);
+        setComparisonImage(imageUrl);
         toast({
           title: "Comparison image uploaded",
           description: "Your comparison image has been uploaded successfully.",
         });
-      };
-
-      reader.onerror = () => {
+      } catch (error) {
+        console.error('Upload error:', error);
         toast({
           title: "Upload failed",
           description: "There was a problem uploading your comparison image.",
           variant: "destructive",
         });
-      };
-
-      reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -147,7 +125,16 @@ export default function ImageUploader() {
     if (comparisonFileInputRef.current) comparisonFileInputRef.current.value = '';
   };
 
-  const startAnalysis = () => {
+  const startAnalysis = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to analyze handwriting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!uploadedImage) {
       toast({
         title: "No handwriting sample",
@@ -172,51 +159,38 @@ export default function ImageUploader() {
       description: "Your handwriting is being analyzed. This might take a moment.",
     });
     
-    // In a real app, this would be an API call to a machine learning service
-    // For this demo, we'll use a simulated analysis with a delay
-    setTimeout(() => {
-      try {
-        // Perform the analysis
-        const analysisResult = analyzeHandwriting(
-          uploadedImage,
-          comparisonType,
-          comparisonType === "image" ? comparisonImage || undefined : undefined,
-          comparisonType === "font" ? font : undefined
-        );
-        
-        // Generate a unique ID for this analysis
-        const analysisId = generateAnalysisId();
-        
-        // Save the analysis to history
-        saveAnalysisRecord({
-          id: analysisId,
-          date: new Date().toISOString(),
-          imageUrl: uploadedImage,
-          comparisonType: comparisonType,
-          comparisonTarget: comparisonType === "font" ? fontName : "Custom Image",
-          similarityScore: analysisResult.similarityScore,
-          analysisData: analysisResult
-        });
-        
-        setIsAnalyzing(false);
-        
-        toast({
-          title: "Analysis complete",
-          description: "Your handwriting analysis is ready to view.",
-        });
-        
-        // Navigate to the analysis result page
-        navigate(`/analysis/${analysisId}`);
-      } catch (error) {
-        console.error("Analysis error:", error);
-        setIsAnalyzing(false);
-        toast({
-          title: "Analysis failed",
-          description: "There was a problem analyzing your handwriting. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }, 2000); // Simulate processing time
+    try {
+      const analysisResult = analyzeHandwriting(
+        uploadedImage,
+        comparisonType,
+        comparisonType === "image" ? comparisonImage || undefined : undefined,
+        comparisonType === "font" ? font : undefined
+      );
+
+      const record = await saveAnalysisResult(
+        uploadedImage,
+        comparisonType,
+        comparisonType === "font" ? fontName : "Custom Image",
+        analysisResult.similarityScore,
+        analysisResult
+      );
+      
+      toast({
+        title: "Analysis complete",
+        description: "Your handwriting analysis is ready to view.",
+      });
+      
+      navigate(`/analysis/${record.id}`);
+    } catch (error) {
+      console.error("Analysis error:", error);
+      toast({
+        title: "Analysis failed",
+        description: "There was a problem analyzing your handwriting. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (

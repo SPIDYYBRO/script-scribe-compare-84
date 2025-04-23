@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/layout/Navbar";
@@ -6,7 +5,7 @@ import ImageUploader from "@/components/upload/ImageUploader";
 import AnalysisResult from "@/components/analysis/AnalysisResult";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { getAnalysisHistory } from "@/utils/storageService";
+import { getAnalysisHistory } from "@/utils/analysisService";
 
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
@@ -15,15 +14,23 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(tabParam === 'results' ? "results" : "upload");
   const [latestAnalysisId, setLatestAnalysisId] = useState<string | undefined>(undefined);
   
-  // Get the latest analysis on load
   useEffect(() => {
-    const history = getAnalysisHistory();
-    if (history.length > 0) {
-      setLatestAnalysisId(history[0].id);
+    const fetchLatestAnalysis = async () => {
+      try {
+        const history = await getAnalysisHistory();
+        if (history && history.length > 0) {
+          setLatestAnalysisId(history[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching analysis history:", error);
+      }
+    };
+
+    if (user) {
+      fetchLatestAnalysis();
     }
-  }, []);
+  }, [user]);
   
-  // If user is not logged in, redirect to login
   if (!isLoading && !user) {
     return <Navigate to="/login" replace />;
   }
