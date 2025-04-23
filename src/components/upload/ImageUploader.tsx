@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Image, Upload } from "lucide-react";
+import { Image, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFont } from "@/contexts/FontContext";
 import { analyzeHandwriting } from "@/utils/handwritingAnalysis";
@@ -10,6 +10,7 @@ import { uploadImage } from "@/utils/supabaseStorage";
 import { saveAnalysisResult } from "@/utils/analysisService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Progress } from "@/components/ui/progress";
 
 type ComparisonType = "font" | "image";
 
@@ -21,6 +22,7 @@ export default function ImageUploader() {
   
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [comparisonImage, setComparisonImage] = useState<string | null>(null);
@@ -58,8 +60,13 @@ export default function ImageUploader() {
     }
 
     setIsUploading(true);
+    setUploadProgress(0);
+    
     try {
-      const imageUrl = await uploadImage(file);
+      const imageUrl = await uploadImage(file, (progress) => {
+        setUploadProgress(progress);
+      });
+      
       setUploadedImage(imageUrl);
       toast({
         title: "Image uploaded",
@@ -69,11 +76,12 @@ export default function ImageUploader() {
       console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: "There was a problem uploading your image.",
+        description: "There was a problem uploading your image. Please try again with a smaller image.",
         variant: "destructive",
       });
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -91,8 +99,14 @@ export default function ImageUploader() {
         return;
       }
 
+      setIsUploading(true);
+      setUploadProgress(0);
+      
       try {
-        const imageUrl = await uploadImage(file);
+        const imageUrl = await uploadImage(file, (progress) => {
+          setUploadProgress(progress);
+        });
+        
         setComparisonImage(imageUrl);
         toast({
           title: "Comparison image uploaded",
@@ -102,17 +116,23 @@ export default function ImageUploader() {
         console.error('Upload error:', error);
         toast({
           title: "Upload failed",
-          description: "There was a problem uploading your comparison image.",
+          description: "There was a problem uploading your comparison image. Please try again with a smaller image.",
           variant: "destructive",
         });
+      } finally {
+        setIsUploading(false);
+        setUploadProgress(0);
       }
     }
   };
 
   const resetUpload = () => {
     setUploadedImage(null);
-    setComparisonImage(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const resetComparisonImage = () => {
+    setComparisonImage(null);
     if (comparisonFileInputRef.current) comparisonFileInputRef.current.value = '';
   };
 
@@ -152,14 +172,14 @@ export default function ImageUploader() {
     
     try {
       const analysisResult = analyzeHandwriting(
-        uploadedImage,
+        uploadedImage!,
         comparisonType,
         comparisonType === "image" ? comparisonImage || undefined : undefined,
         comparisonType === "font" ? font : undefined
       );
 
       const record = await saveAnalysisResult(
-        uploadedImage,
+        uploadedImage!,
         comparisonType,
         comparisonType === "font" ? fontName : "Custom Image",
         analysisResult.similarityScore,
@@ -195,40 +215,47 @@ export default function ImageUploader() {
             </div>
 
             {!uploadedImage ? (
-              <div
-                className={`upload-zone h-64 ${dragActive ? 'border-scriptGreen ring-1 ring-scriptGreen' : ''}`}
-                onDragOver={(e) => { 
-                  e.preventDefault(); 
-                  setDragActive(true); 
-                }}
-                onDragEnter={(e) => { 
-                  e.preventDefault(); 
-                  setDragActive(true); 
-                }}
-                onDragLeave={(e) => { 
-                  e.preventDefault(); 
-                  setDragActive(false); 
-                }}
-                onDrop={handleDrop}
-              >
-                <label htmlFor="file-upload" className="flex flex-col items-center justify-center h-full cursor-pointer">
-                  <Upload className="h-10 w-10 text-scriptGreen mb-2" />
-                  <p className="text-sm font-medium mb-1">
-                    {isUploading ? "Uploading..." : "Drag & drop or click to upload"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">PNG, JPG or JPEG</p>
-                  <input
-                    id="file-upload"
-                    name="file-upload"
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    onChange={handleChange}
-                    disabled={isUploading}
-                  />
-                </label>
-              </div>
+              <>
+                {isUploading ? (
+                  <div className="h-64 flex flex-col items-center justify-center">
+                    <p className="text-sm mb-2">Uploading... {Math.round(uploadProgress)}%</p>
+                    <Progress value={uploadProgress} className="w-full max-w-xs" />
+                  </div>
+                ) : (
+                  <div
+                    className={`upload-zone h-64 ${dragActive ? 'border-scriptGreen ring-1 ring-scriptGreen' : ''}`}
+                    onDragOver={(e) => { 
+                      e.preventDefault(); 
+                      setDragActive(true); 
+                    }}
+                    onDragEnter={(e) => { 
+                      e.preventDefault(); 
+                      setDragActive(true); 
+                    }}
+                    onDragLeave={(e) => { 
+                      e.preventDefault(); 
+                      setDragActive(false); 
+                    }}
+                    onDrop={handleDrop}
+                  >
+                    <label htmlFor="file-upload" className="flex flex-col items-center justify-center h-full cursor-pointer">
+                      <Upload className="h-10 w-10 text-scriptGreen mb-2" />
+                      <p className="text-sm font-medium mb-1">Drag & drop or click to upload</p>
+                      <p className="text-xs text-muted-foreground">PNG, JPG or JPEG (max 5MB recommended)</p>
+                      <input
+                        id="file-upload"
+                        name="file-upload"
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={handleChange}
+                        disabled={isUploading}
+                      />
+                    </label>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="relative h-64">
                 <img
@@ -239,10 +266,10 @@ export default function ImageUploader() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="absolute top-2 right-2 bg-background/80"
+                  className="absolute top-2 right-2 bg-background/80 p-1.5 h-auto"
                   onClick={resetUpload}
                 >
-                  Replace
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             )}
@@ -282,14 +309,17 @@ export default function ImageUploader() {
               </div>
             ) : (
               <>
-                {!comparisonImage ? (
+                {isUploading ? (
+                  <div className="h-[220px] flex flex-col items-center justify-center">
+                    <p className="text-sm mb-2">Uploading... {Math.round(uploadProgress)}%</p>
+                    <Progress value={uploadProgress} className="w-full max-w-xs" />
+                  </div>
+                ) : !comparisonImage ? (
                   <div className="upload-zone h-[220px]">
                     <label htmlFor="comparison-upload" className="flex flex-col items-center justify-center h-full cursor-pointer">
                       <Image className="h-10 w-10 text-scriptGreen mb-2" />
-                      <p className="text-sm font-medium mb-1">
-                        Upload comparison image
-                      </p>
-                      <p className="text-xs text-muted-foreground">PNG, JPG or JPEG</p>
+                      <p className="text-sm font-medium mb-1">Upload comparison image</p>
+                      <p className="text-xs text-muted-foreground">PNG, JPG or JPEG (max 5MB recommended)</p>
                       <input
                         id="comparison-upload"
                         name="comparison-upload"
@@ -311,10 +341,10 @@ export default function ImageUploader() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="absolute top-2 right-2 bg-background/80"
-                      onClick={() => setComparisonImage(null)}
+                      className="absolute top-2 right-2 bg-background/80 p-1.5 h-auto"
+                      onClick={resetComparisonImage}
                     >
-                      Replace
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
@@ -327,7 +357,7 @@ export default function ImageUploader() {
       <div className="flex justify-center">
         <Button 
           className="bg-scriptGreen hover:bg-scriptGreen/90 px-8"
-          disabled={!uploadedImage || (comparisonType === "image" && !comparisonImage) || isAnalyzing}
+          disabled={!uploadedImage || (comparisonType === "image" && !comparisonImage) || isAnalyzing || isUploading}
           onClick={startAnalysis}
         >
           {isAnalyzing ? "Analyzing..." : "Analyze Handwriting"}
