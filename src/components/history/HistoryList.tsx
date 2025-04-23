@@ -1,20 +1,11 @@
+
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Image } from "lucide-react";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { getAnalysisHistory, removeAnalysisRecord, type AnalysisRecord } from "@/utils/analysisService";
+import { EmptyHistory } from "./EmptyHistory";
+import { HistoryHeader } from "./HistoryHeader";
+import { HistoryItem } from "./HistoryItem";
+import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 
 export default function HistoryList() {
   const { toast } = useToast();
@@ -91,11 +82,7 @@ export default function HistoryList() {
     
     const daysUntilExpiry = Math.ceil((expiryDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (daysUntilExpiry <= 1) {
-      return "Expires today";
-    } else {
-      return `Expires in ${daysUntilExpiry} days`;
-    }
+    return daysUntilExpiry <= 1 ? "Expires today" : `Expires in ${daysUntilExpiry} days`;
   };
 
   if (loading) {
@@ -108,96 +95,33 @@ export default function HistoryList() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Analysis History</h2>
-        <p className="text-sm text-muted-foreground">Analyses are stored for 30 days</p>
-      </div>
+      <HistoryHeader 
+        title="Analysis History" 
+        subtitle="Analyses are stored for 30 days" 
+      />
       
       {historyItems.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Image className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-medium mb-2">No history yet</h3>
-            <p className="text-muted-foreground text-center max-w-md mb-6">
-              You haven't performed any handwriting analyses yet. 
-              Upload an image to get started.
-            </p>
-            <Button asChild className="bg-scriptGreen hover:bg-scriptGreen/90">
-              <Link to="/dashboard">Start Analysis</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyHistory />
       ) : (
         <div className="space-y-4">
           {historyItems.map(item => (
-            <Card key={item.id} className="overflow-hidden">
-              <div className="flex flex-col sm:flex-row">
-                <div className="w-full sm:w-36 h-36 bg-muted flex items-center justify-center">
-                  <img 
-                    src={item.image_url} 
-                    alt="Handwriting sample" 
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <CardContent className="flex-1 p-4">
-                  <div className="flex flex-col sm:flex-row justify-between mb-2">
-                    <div>
-                      <h3 className="font-medium">{formatDate(item.created_at)}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Compared to {item.comparison_target}
-                      </p>
-                    </div>
-                    <div className="mt-2 sm:mt-0">
-                      <span className={`font-bold ${
-                        item.similarity_score >= 80 ? "text-green-500" : 
-                        item.similarity_score >= 60 ? "text-yellow-500" : 
-                        "text-red-500"
-                      }`}>
-                        {item.similarity_score}% Similarity
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center mt-4">
-                    <span className="text-xs text-muted-foreground">
-                      {getExpiryMessage(item.created_at)}
-                    </span>
-                    <div className="space-x-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to={`/analysis/${item.id}`}>View Results</Link>
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => deleteItem(item.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </div>
-            </Card>
+            <HistoryItem
+              key={item.id}
+              item={item}
+              onDelete={deleteItem}
+              formatDate={formatDate}
+              getExpiryMessage={getExpiryMessage}
+            />
           ))}
         </div>
       )}
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this analysis? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
+
