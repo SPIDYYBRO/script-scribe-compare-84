@@ -34,10 +34,9 @@ export const uploadImage = async (file: File, onProgress?: (progress: number) =>
   return publicUrl;
 };
 
-// Helper function to resize large images before uploading
 const resizeImageIfNeeded = async (file: File): Promise<File> => {
-  // If file is not an image or is small enough, return it as is
-  if (!file.type.startsWith('image/') || file.size <= 1000000) { // 1MB threshold
+  // If file is not an image, return it as is
+  if (!file.type.startsWith('image/')) {
     return file;
   }
 
@@ -54,7 +53,7 @@ const resizeImageIfNeeded = async (file: File): Promise<File> => {
   // Calculate new dimensions (maintain aspect ratio)
   let width = loadedImg.width;
   let height = loadedImg.height;
-  const maxDimension = 1200; // Max width/height in pixels
+  const maxDimension = 1600; // Increased max dimension
 
   if (width > height && width > maxDimension) {
     height = Math.round((height * maxDimension) / width);
@@ -74,12 +73,12 @@ const resizeImageIfNeeded = async (file: File): Promise<File> => {
   // Clean up object URL
   URL.revokeObjectURL(img.src);
   
-  // Convert canvas to blob and then to File
+  // Convert canvas to blob and then to File with higher quality
   const blob = await new Promise<Blob>((resolve) => {
     canvas.toBlob((b) => {
       if (b) resolve(b);
       else resolve(new Blob([]));
-    }, file.type, 0.85); // 0.85 quality to further reduce size
+    }, file.type, 0.92); // Increased quality to 0.92
   });
   
   // Create a new file with the same name but resized content
