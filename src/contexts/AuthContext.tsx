@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
@@ -117,8 +118,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/dashboard',
+        }
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Google OAuth Error:', error);
+        
+        // Show specific error message based on error code
+        if (error.message.includes('403')) {
+          toast({
+            title: "Google Login Error",
+            description: "Provider not enabled. Please ensure Google OAuth is configured in your Supabase project.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Google Login Error",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
+        throw error;
+      }
     } catch (error) {
       console.error('Error logging in with Google:', error);
       throw error;
