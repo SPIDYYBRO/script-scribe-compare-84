@@ -216,7 +216,7 @@ export default function ImageUploader() {
                   <p className="text-sm font-medium mb-1">
                     {isUploading ? "Uploading..." : "Drag & drop or click to upload"}
                   </p>
-                  <p className="text-xs text-muted-foreground">PNG, JPG or JPEG (max. 5MB)</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG or JPEG</p>
                   <input
                     id="file-upload"
                     name="file-upload"
@@ -289,7 +289,7 @@ export default function ImageUploader() {
                       <p className="text-sm font-medium mb-1">
                         Upload comparison image
                       </p>
-                      <p className="text-xs text-muted-foreground">PNG, JPG or JPEG (max. 5MB)</p>
+                      <p className="text-xs text-muted-foreground">PNG, JPG or JPEG</p>
                       <input
                         id="comparison-upload"
                         name="comparison-upload"
