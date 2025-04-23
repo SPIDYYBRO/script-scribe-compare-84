@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const uploadImage = async (file: File, onProgress?: (progress: number) => void): Promise<string> => {

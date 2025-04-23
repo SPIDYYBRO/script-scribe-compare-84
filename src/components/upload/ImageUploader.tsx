@@ -1,8 +1,7 @@
-import { useState, useCallback, useRef } from "react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Image, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFont } from "@/contexts/FontContext";
 import { analyzeHandwriting } from "@/utils/handwritingAnalysis";
@@ -11,6 +10,9 @@ import { saveAnalysisResult } from "@/utils/analysisService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
+import DragDropZone from "./DragDropZone";
+import UploadedImage from "./UploadedImage";
+import ComparisonSection from "./ComparisonSection";
 
 type ComparisonType = "font" | "image";
 
@@ -20,34 +22,12 @@ export default function ImageUploader() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [comparisonImage, setComparisonImage] = useState<string | null>(null);
   const [comparisonType, setComparisonType] = useState<ComparisonType>("font");
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const comparisonFileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFileUpload(e.dataTransfer.files[0]);
-    }
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    
-    if (e.target.files && e.target.files.length > 0) {
-      handleFileUpload(e.target.files[0]);
-    }
-  };
 
   const handleFileUpload = async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -124,16 +104,6 @@ export default function ImageUploader() {
         setUploadProgress(0);
       }
     }
-  };
-
-  const resetUpload = () => {
-    setUploadedImage(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const resetComparisonImage = () => {
-    setComparisonImage(null);
-    if (comparisonFileInputRef.current) comparisonFileInputRef.current.value = '';
   };
 
   const startAnalysis = async () => {
@@ -222,56 +192,17 @@ export default function ImageUploader() {
                     <Progress value={uploadProgress} className="w-full max-w-xs" />
                   </div>
                 ) : (
-                  <div
-                    className={`upload-zone h-64 ${dragActive ? 'border-scriptGreen ring-1 ring-scriptGreen' : ''}`}
-                    onDragOver={(e) => { 
-                      e.preventDefault(); 
-                      setDragActive(true); 
-                    }}
-                    onDragEnter={(e) => { 
-                      e.preventDefault(); 
-                      setDragActive(true); 
-                    }}
-                    onDragLeave={(e) => { 
-                      e.preventDefault(); 
-                      setDragActive(false); 
-                    }}
-                    onDrop={handleDrop}
-                  >
-                    <label htmlFor="file-upload" className="flex flex-col items-center justify-center h-full cursor-pointer">
-                      <Upload className="h-10 w-10 text-scriptGreen mb-2" />
-                      <p className="text-sm font-medium mb-1">Drag & drop or click to upload</p>
-                      <p className="text-xs text-muted-foreground">PNG, JPG or JPEG (max 5MB recommended)</p>
-                      <input
-                        id="file-upload"
-                        name="file-upload"
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={handleChange}
-                        disabled={isUploading}
-                      />
-                    </label>
-                  </div>
+                  <DragDropZone
+                    onFileDrop={handleFileUpload}
+                    isUploading={isUploading}
+                  />
                 )}
               </>
             ) : (
-              <div className="relative h-64">
-                <img
-                  src={uploadedImage}
-                  alt="Uploaded handwriting sample"
-                  className="w-full h-full rounded-md object-contain bg-muted/50"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-2 right-2 bg-background/80 p-1.5 h-auto"
-                  onClick={resetUpload}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              <UploadedImage
+                imageUrl={uploadedImage}
+                onReset={() => setUploadedImage(null)}
+              />
             )}
           </CardContent>
         </Card>
@@ -283,73 +214,18 @@ export default function ImageUploader() {
               <p className="text-sm text-muted-foreground">Select what to compare with</p>
             </div>
 
-            <div className="mb-4">
-              <Select 
-                value={comparisonType} 
-                onValueChange={(value) => {
-                  setComparisonType(value as ComparisonType);
-                  setComparisonImage(null);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select comparison type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="font">Standard Font ({fontName})</SelectItem>
-                  <SelectItem value="image">Another Image</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {comparisonType === "font" ? (
-              <div className={`handwriting-sample font-${font} flex items-center justify-center h-[220px] text-center`}>
-                <p className="text-lg px-4">
-                  The quick brown fox jumps over the lazy dog
-                </p>
-              </div>
-            ) : (
-              <>
-                {isUploading ? (
-                  <div className="h-[220px] flex flex-col items-center justify-center">
-                    <p className="text-sm mb-2">Uploading... {Math.round(uploadProgress)}%</p>
-                    <Progress value={uploadProgress} className="w-full max-w-xs" />
-                  </div>
-                ) : !comparisonImage ? (
-                  <div className="upload-zone h-[220px]">
-                    <label htmlFor="comparison-upload" className="flex flex-col items-center justify-center h-full cursor-pointer">
-                      <Image className="h-10 w-10 text-scriptGreen mb-2" />
-                      <p className="text-sm font-medium mb-1">Upload comparison image</p>
-                      <p className="text-xs text-muted-foreground">PNG, JPG or JPEG (max 5MB recommended)</p>
-                      <input
-                        id="comparison-upload"
-                        name="comparison-upload"
-                        ref={comparisonFileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={handleComparisonFileChange}
-                      />
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative h-[220px]">
-                    <img
-                      src={comparisonImage}
-                      alt="Comparison image"
-                      className="w-full h-full rounded-md object-contain bg-muted/50"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="absolute top-2 right-2 bg-background/80 p-1.5 h-auto"
-                      onClick={resetComparisonImage}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
+            <ComparisonSection
+              comparisonType={comparisonType}
+              comparisonImage={comparisonImage}
+              isUploading={isUploading}
+              uploadProgress={uploadProgress}
+              onTypeChange={(value) => {
+                setComparisonType(value as ComparisonType);
+                setComparisonImage(null);
+              }}
+              onFileChange={handleComparisonFileChange}
+              onReset={() => setComparisonImage(null)}
+            />
           </CardContent>
         </Card>
       </div>
