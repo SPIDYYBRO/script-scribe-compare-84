@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { User, Mail, Phone, LogIn } from "lucide-react";
+import { User, Mail, Phone, LogIn, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 type AuthMode = "login" | "register" | "phone";
@@ -38,10 +38,7 @@ export default function AuthForm() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      toast({
-        title: "Login successful",
-        description: "Welcome back to Script-Check!",
-      });
+      // No need for toast here as redirecting to dashboard
     } catch (error) {
       console.error(error);
       toast({
@@ -49,7 +46,6 @@ export default function AuthForm() {
         description: "Please check your credentials and try again.",
         variant: "destructive"
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -194,6 +190,7 @@ export default function AuthForm() {
                   placeholder="name@example.com"
                   className="pl-10"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -206,6 +203,7 @@ export default function AuthForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                disabled={isSubmitting}
               />
             </div>
             <Button 
@@ -213,7 +211,12 @@ export default function AuthForm() {
               className="w-full bg-scriptGreen hover:bg-scriptGreen/90"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Logging in..." : "Login"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : "Login"}
             </Button>
           </form>
           
@@ -234,7 +237,11 @@ export default function AuthForm() {
             onClick={handleGoogleLogin}
             disabled={isSubmitting}
           >
-            <LogIn className="mr-2 h-4 w-4" />
+            {isSubmitting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <LogIn className="mr-2 h-4 w-4" />
+            )}
             Google
           </Button>
         </TabsContent>
@@ -252,6 +259,7 @@ export default function AuthForm() {
                   placeholder="John Doe"
                   className="pl-10"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -267,6 +275,7 @@ export default function AuthForm() {
                   placeholder="name@example.com"
                   className="pl-10"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -279,6 +288,7 @@ export default function AuthForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                disabled={isSubmitting}
               />
             </div>
             <Button 
@@ -286,7 +296,12 @@ export default function AuthForm() {
               className="w-full bg-scriptGreen hover:bg-scriptGreen/90"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Creating Account..." : "Create Account"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : "Create Account"}
             </Button>
           </form>
           
@@ -307,7 +322,11 @@ export default function AuthForm() {
             onClick={handleGoogleLogin}
             disabled={isSubmitting}
           >
-            <LogIn className="mr-2 h-4 w-4" />
+            {isSubmitting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <LogIn className="mr-2 h-4 w-4" />
+            )}
             Google
           </Button>
         </TabsContent>
@@ -327,6 +346,7 @@ export default function AuthForm() {
                     placeholder="+1 (123) 456-7890"
                     className="pl-10"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -335,7 +355,12 @@ export default function AuthForm() {
                 className="w-full bg-scriptGreen hover:bg-scriptGreen/90"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Sending..." : "Send Verification Code"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : "Send Verification Code"}
               </Button>
             </form>
           ) : (
@@ -348,6 +373,7 @@ export default function AuthForm() {
                   onChange={(e) => setVerificationCode(e.target.value)}
                   placeholder="123456"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <Button 
@@ -355,7 +381,12 @@ export default function AuthForm() {
                 className="w-full bg-scriptGreen hover:bg-scriptGreen/90"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Verifying..." : "Verify and Login"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : "Verify and Login"}
               </Button>
               <Button 
                 variant="link" 
@@ -365,6 +396,7 @@ export default function AuthForm() {
                   setVerificationCode("");
                 }}
                 className="w-full"
+                disabled={isSubmitting}
               >
                 Use a different phone number
               </Button>

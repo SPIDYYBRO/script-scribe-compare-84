@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change event:', event);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -62,10 +62,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setProfile(null);
         }
+        
+        setIsLoading(false);
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session ? 'Session exists' : 'No session');
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -80,16 +83,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log('Attempting login for:', email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
+      console.log('Login successful');
     } catch (error) {
       console.error('Error logging in:', error);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -126,7 +129,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error('Google OAuth Error:', error);
         
-        // Show specific error message based on error code
         if (error.message.includes('403')) {
           toast({
             title: "Google Login Error",
@@ -185,13 +187,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     setIsLoading(true);
     try {
-      // Update email in auth if it has changed
       if (data.email && data.email !== user.email) {
         const { error: emailError } = await supabase.auth.updateUser({ email: data.email });
         if (emailError) throw emailError;
       }
       
-      // Update profile in the profiles table
       const { error: profileError } = await supabase
         .from('profiles')
         .update(data)
@@ -199,7 +199,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
       if (profileError) throw profileError;
       
-      // Refresh profile data
       await fetchProfile(user.id);
       
       toast({
