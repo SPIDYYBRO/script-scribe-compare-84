@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Image, Upload } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useFont } from "@/contexts/FontContext";
 import { analyzeHandwriting } from "@/utils/handwritingAnalysis";
 import { uploadImage } from "@/utils/supabaseStorage";
@@ -52,15 +52,6 @@ export default function ImageUploader() {
       toast({
         title: "Invalid file type",
         description: "Please upload an image file (JPEG, PNG, etc.).",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please upload an image smaller than 5MB.",
         variant: "destructive",
       });
       return;
