@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAnalysisRecord } from "@/utils/storageService";
+import { getAnalysisById } from "@/utils/analysisService";
 
 interface AnalysisResultProps {
   analysisId?: string;
@@ -14,18 +14,27 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    if (analysisId) {
-      const record = getAnalysisRecord(analysisId);
-      if (record) {
-        setAnalysisData({
-          ...record.analysisData,
-          comparisonTarget: record.comparisonTarget,
-          date: new Date(record.date),
-          imageUrl: record.imageUrl
-        });
+    const fetchAnalysis = async () => {
+      if (analysisId) {
+        try {
+          const record = await getAnalysisById(analysisId);
+          if (record) {
+            setAnalysisData({
+              ...record.analysis_data,
+              comparisonTarget: record.comparison_target,
+              date: new Date(record.created_at),
+              imageUrl: record.image_url,
+              similarityScore: record.similarity_score
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching analysis:", error);
+        }
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+    
+    fetchAnalysis();
   }, [analysisId]);
   
   const getScoreColor = (score: number) => {

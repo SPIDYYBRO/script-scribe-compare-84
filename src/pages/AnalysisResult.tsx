@@ -4,7 +4,7 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import AnalysisResultContent from "@/components/analysis/AnalysisResult";
-import { getAnalysisRecord } from "@/utils/storageService";
+import { getAnalysisById } from "@/utils/analysisService";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function AnalysisResult() {
@@ -14,30 +14,44 @@ export default function AnalysisResult() {
   const [analysisExists, setAnalysisExists] = useState(false);
   
   useEffect(() => {
-    if (!id) {
-      toast({
-        title: "Analysis not found",
-        description: "The requested analysis could not be found.",
-        variant: "destructive"
-      });
-      setLoading(false);
-      return;
-    }
+    const checkAnalysis = async () => {
+      if (!id) {
+        toast({
+          title: "Analysis not found",
+          description: "The requested analysis could not be found.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const analysisRecord = await getAnalysisById(id);
+        if (!analysisRecord) {
+          toast({
+            title: "Analysis not found",
+            description: "The requested analysis could not be found or has expired.",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // Analysis exists
+        setAnalysisExists(true);
+      } catch (error) {
+        console.error("Error checking analysis:", error);
+        toast({
+          title: "Error loading analysis",
+          description: "There was a problem loading the analysis.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    const analysisRecord = getAnalysisRecord(id);
-    if (!analysisRecord) {
-      toast({
-        title: "Analysis not found",
-        description: "The requested analysis could not be found or has expired.",
-        variant: "destructive"
-      });
-      setLoading(false);
-      return;
-    }
-    
-    // Analysis exists
-    setAnalysisExists(true);
-    setLoading(false);
+    checkAnalysis();
   }, [id, toast]);
   
   return (

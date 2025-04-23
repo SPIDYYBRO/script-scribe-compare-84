@@ -1,72 +1,35 @@
 
-// Local storage service for storing analysis results
+import { getAnalysisById, getAnalysisHistory, removeAnalysisRecord } from "./analysisService";
 
-type AnalysisRecord = {
-  id: string;
-  date: string;
-  imageUrl: string;
-  comparisonType: 'font' | 'image';
-  comparisonTarget: string;
-  similarityScore: number;
-  analysisData: any;
-};
+// Local storage keys
+const HISTORY_KEY = 'analysis_history';
 
-const STORAGE_KEY = 'script-check-analysis-history';
+// For now, this is a wrapper around the Supabase service
+// This allows us to easily switch between local storage and Supabase
 
-// Retrieve analysis history from local storage
-export const getAnalysisHistory = (): AnalysisRecord[] => {
+export const getAnalysisRecord = async (id: string) => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
-    
-    const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : [];
+    return await getAnalysisById(id);
   } catch (error) {
-    console.error('Failed to retrieve analysis history:', error);
-    return [];
-  }
-};
-
-// Save a new analysis record to history
-export const saveAnalysisRecord = (record: AnalysisRecord): void => {
-  try {
-    const history = getAnalysisHistory();
-    const updatedHistory = [record, ...history].slice(0, 50); // Keep up to 50 records
-    
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
-  } catch (error) {
-    console.error('Failed to save analysis record:', error);
-  }
-};
-
-// Remove an analysis record from history
-export const removeAnalysisRecord = (id: string): void => {
-  try {
-    const history = getAnalysisHistory();
-    const updatedHistory = history.filter(record => record.id !== id);
-    
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
-  } catch (error) {
-    console.error('Failed to remove analysis record:', error);
-  }
-};
-
-// Get a specific analysis record by ID
-export const getAnalysisRecord = (id: string): AnalysisRecord | null => {
-  try {
-    const history = getAnalysisHistory();
-    return history.find(record => record.id === id) || null;
-  } catch (error) {
-    console.error('Failed to get analysis record:', error);
+    console.error("Error fetching analysis record:", error);
     return null;
   }
 };
 
-// Clear all analysis history
-export const clearAnalysisHistory = (): void => {
+export const getAnalysisHistory = async () => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+    return await getAnalysisHistory();
   } catch (error) {
-    console.error('Failed to clear analysis history:', error);
+    console.error("Error fetching analysis history:", error);
+    return [];
+  }
+};
+
+export const removeAnalysisRecord = async (id: string) => {
+  try {
+    return await removeAnalysisRecord(id);
+  } catch (error) {
+    console.error("Error removing analysis record:", error);
+    return false;
   }
 };

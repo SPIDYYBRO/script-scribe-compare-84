@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getAnalysisHistory, removeAnalysisRecord } from "@/utils/storageService";
+import { getAnalysisHistory, removeAnalysisRecord } from "@/utils/analysisService";
 
 export default function HistoryList() {
   const { toast } = useToast();
@@ -26,10 +26,11 @@ export default function HistoryList() {
   
   // Load history on mount and when items are deleted
   useEffect(() => {
-    const loadHistory = () => {
+    const loadHistory = async () => {
       try {
-        const history = getAnalysisHistory();
-        setHistoryItems(history);
+        setLoading(true);
+        const history = await getAnalysisHistory();
+        setHistoryItems(history || []);
       } catch (error) {
         console.error("Failed to load history:", error);
         toast({
@@ -50,10 +51,10 @@ export default function HistoryList() {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (itemToDelete) {
       try {
-        removeAnalysisRecord(itemToDelete);
+        await removeAnalysisRecord(itemToDelete);
         setHistoryItems(historyItems.filter(item => item.id !== itemToDelete));
         toast({
           title: "Analysis deleted",
