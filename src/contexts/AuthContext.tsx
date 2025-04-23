@@ -4,8 +4,14 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
+// Define an extended user type with our custom fields
+interface ExtendedUser extends User {
+  name: string;
+  photoUrl: string;
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: ExtendedUser | null;
   session: Session | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -13,13 +19,24 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginWithPhone: (phone: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (data: { name?: string; phone?: string; photoUrl?: string }) => Promise<void>;
+  updateProfile: (data: { name?: string; phone?: string; photoUrl?: string; email?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper function to transform User to ExtendedUser with our custom fields
+const transformUser = (user: User | null): ExtendedUser | null => {
+  if (!user) return null;
+
+  return {
+    ...user,
+    name: user.user_metadata?.name || '',
+    photoUrl: user.user_metadata?.photo_url || '',
+  };
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -29,14 +46,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
+        setUser(transformUser(session?.user ?? null));
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      setUser(transformUser(session?.user ?? null));
       setIsLoading(false);
     });
 
@@ -124,17 +141,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateProfile = async (data: { name?: string; phone?: string; photoUrl?: string }) => {
+  const updateProfile = async (data: { name?: string; phone?: string; photoUrl?: string; email?: string }) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          name: data.name,
-          phone: data.phone,
-          photo_url: data.photoUrl,
-        },
-      });
+      const updates: { data?: Record<string, any>; email?: string } = {};
+      
+      // Handle email update separately
+      if (data.email) {
+        updates.email = data.email;
+      }
+      
+      // Handle metadata updates
+      const metadata: Record<string, any> = {};
+      if (data.name) metadata.name = data.name;
+      if (data.phone) metadata.phone = data.phone;
+      if (data.photoUrl) metadata.photo_url = data.photoUrl;
+      
+      if (Object.keys(metadata).length > 0) {
+        updates.data = metadata;
+      }
+      
+      const { error } = await supabase.auth.updateUser(updates);
       if (error) throw error;
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been saved successfully.",
+      });
     } catch (error) {
       console.error('Error updating profile:', error);
       throw error;

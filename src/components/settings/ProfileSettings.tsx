@@ -34,9 +34,9 @@ export default function ProfileSettings() {
     try {
       await updateProfile({
         name,
-        email,
         phone,
-        photoUrl: photo
+        photoUrl: photo,
+        email: user?.email !== email ? email : undefined
       });
       
       toast({

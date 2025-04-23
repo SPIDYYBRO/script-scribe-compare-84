@@ -110,7 +110,7 @@ export default function Navbar() {
                 <Avatar className="cursor-pointer">
                   <AvatarImage src={user.photoUrl} />
                   <AvatarFallback className="bg-scriptGreen text-white">
-                    {user.name.slice(0, 2).toUpperCase()}
+                    {user.name ? user.name.slice(0, 2).toUpperCase() : <User className="h-4 w-4" />}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
@@ -118,7 +118,7 @@ export default function Navbar() {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuItem className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>{user.name}</span>
+                  <span>{user.name || user.email}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
