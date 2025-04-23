@@ -25,7 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const location = useLocation();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -108,9 +108,9 @@ export default function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer">
-                  <AvatarImage src={user.photoUrl} />
+                  <AvatarImage src={profile?.photo_url || undefined} />
                   <AvatarFallback className="bg-scriptGreen text-white">
-                    {user.name ? user.name.slice(0, 2).toUpperCase() : <User className="h-4 w-4" />}
+                    {profile?.name ? profile.name.slice(0, 2).toUpperCase() : <User className="h-4 w-4" />}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
@@ -118,7 +118,7 @@ export default function Navbar() {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuItem className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>{user.name || user.email}</span>
+                  <span>{profile?.name || user.email}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
