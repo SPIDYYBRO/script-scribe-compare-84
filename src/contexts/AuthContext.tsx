@@ -1,59 +1,59 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  photoUrl?: string;
-}
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithPhone: (phone: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+  updateProfile: (data: { name?: string; phone?: string; photoUrl?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock auth functions for now - would be replaced with real auth provider
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Check session storage for mock logged in user
-    const savedUser = sessionStorage.getItem('script-check-user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error('Failed to parse saved user', e);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
       }
-    }
-    setIsLoading(false);
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Mock login - would connect to a real auth system in production
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const mockUser = {
-        id: '123',
-        name: 'Test User',
-        email
-      };
-      setUser(mockUser);
-      sessionStorage.setItem('script-check-user', JSON.stringify(mockUser));
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error logging in:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -62,82 +62,82 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string, name: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const mockUser = {
-        id: '123',
-        name,
-        email
-      };
-      setUser(mockUser);
-      sessionStorage.setItem('script-check-user', JSON.stringify(mockUser));
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error registering:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
   const loginWithGoogle = async () => {
-    setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const mockUser = {
-        id: '456',
-        name: 'Google User',
-        email: 'google@example.com',
-        photoUrl: 'https://via.placeholder.com/150'
-      };
-      setUser(mockUser);
-      sessionStorage.setItem('script-check-user', JSON.stringify(mockUser));
-    } finally {
-      setIsLoading(false);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error logging in with Google:', error);
+      throw error;
     }
   };
 
   const loginWithPhone = async (phone: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const mockUser = {
-        id: '789',
-        name: 'Phone User',
-        email: '',
-        phone
-      };
-      setUser(mockUser);
-      sessionStorage.setItem('script-check-user', JSON.stringify(mockUser));
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
+      });
+      if (error) throw error;
+      toast({
+        title: "Verification code sent",
+        description: "Please check your phone for the verification code.",
+      });
+    } catch (error) {
+      console.error('Error sending verification code:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = async () => {
-    // Mock logout
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setUser(null);
-      sessionStorage.removeItem('script-check-user');
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error logging out:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updateProfile = async (data: Partial<User>) => {
+  const updateProfile = async (data: { name?: string; phone?: string; photoUrl?: string }) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      if (user) {
-        const updatedUser = { ...user, ...data };
-        setUser(updatedUser);
-        sessionStorage.setItem('script-check-user', JSON.stringify(updatedUser));
-      }
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          name: data.name,
+          phone: data.phone,
+          photo_url: data.photoUrl,
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -147,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider 
       value={{ 
         user, 
+        session,
         isLoading, 
         login, 
         register, 
