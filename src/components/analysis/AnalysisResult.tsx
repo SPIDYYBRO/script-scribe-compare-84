@@ -3,14 +3,31 @@ import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAnalysisById } from "@/utils/analysisService";
+import { getAnalysisById, type AnalysisRecord } from "@/utils/analysisService";
 
 interface AnalysisResultProps {
   analysisId?: string;
 }
 
+interface EnhancedAnalysisData {
+  comparisonTarget: string;
+  date: Date;
+  imageUrl: string;
+  similarityScore: number;
+  characterSpacing: number;
+  lineConsistency: number;
+  characterFormation: number;
+  pressure: number;
+  slant: number;
+  details: Array<{
+    character: string;
+    similarityScore: number;
+    notes: string;
+  }>;
+}
+
 export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
-  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [analysisData, setAnalysisData] = useState<EnhancedAnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -19,12 +36,15 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
         try {
           const record = await getAnalysisById(analysisId);
           if (record) {
+            // Type assertion to ensure TypeScript knows this is an AnalysisRecord
+            const typedRecord = record as AnalysisRecord;
+            
             setAnalysisData({
-              ...record.analysis_data,
-              comparisonTarget: record.comparison_target,
-              date: new Date(record.created_at),
-              imageUrl: record.image_url,
-              similarityScore: record.similarity_score
+              ...typedRecord.analysis_data,
+              comparisonTarget: typedRecord.comparison_target,
+              date: new Date(typedRecord.created_at),
+              imageUrl: typedRecord.image_url,
+              similarityScore: typedRecord.similarity_score
             });
           }
         } catch (error) {

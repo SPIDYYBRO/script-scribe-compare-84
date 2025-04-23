@@ -15,11 +15,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getAnalysisHistory, removeAnalysisRecord } from "@/utils/analysisService";
+import { getAnalysisHistory, removeAnalysisRecord, type AnalysisRecord } from "@/utils/analysisService";
 
 export default function HistoryList() {
   const { toast } = useToast();
-  const [historyItems, setHistoryItems] = useState<any[]>([]);
+  const [historyItems, setHistoryItems] = useState<AnalysisRecord[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

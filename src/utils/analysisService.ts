@@ -1,6 +1,18 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Define a type for the analysis record to help with type checking
+export interface AnalysisRecord {
+  id: string;
+  user_id: string;
+  image_url: string;
+  comparison_type: 'font' | 'image';
+  comparison_target: string;
+  similarity_score: number;
+  analysis_data: any;
+  created_at: string;
+}
+
 export const saveAnalysisResult = async (
   imageUrl: string,
   comparisonType: 'font' | 'image',
@@ -12,7 +24,7 @@ export const saveAnalysisResult = async (
   const { data: authData } = await supabase.auth.getUser();
   const userId = authData?.user?.id;
   
-  // Using the generic query method to bypass type checking since types haven't been updated yet
+  // Using the generic query method to bypass type checking
   const { data, error } = await supabase
     .from('analysis_records')
     .insert({
@@ -23,22 +35,22 @@ export const saveAnalysisResult = async (
       similarity_score: similarityScore,
       analysis_data: analysisData
     })
-    .select()
+    .select('*')
     .single();
 
   if (error) throw error;
-  return data;
+  return data as AnalysisRecord;
 };
 
 export const getAnalysisHistory = async () => {
-  // Using the generic query method to bypass type checking since types haven't been updated yet
+  // Using the generic query method to bypass type checking
   const { data, error } = await supabase
     .from('analysis_records')
     .select('*')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return data as AnalysisRecord[];
 };
 
 export const getAnalysisById = async (id: string) => {
@@ -49,7 +61,7 @@ export const getAnalysisById = async (id: string) => {
     .single();
     
   if (error) throw error;
-  return data;
+  return data as AnalysisRecord;
 };
 
 export const removeAnalysisRecord = async (id: string) => {

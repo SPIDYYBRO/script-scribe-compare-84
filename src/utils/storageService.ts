@@ -1,10 +1,10 @@
 
-import { getAnalysisById, getAnalysisHistory, removeAnalysisRecord } from "./analysisService";
+import { getAnalysisById } from "./analysisService";
 
 // Local storage keys
 const HISTORY_KEY = 'analysis_history';
 
-// For now, this is a wrapper around the Supabase service
+// For now, this is a wrapper around the analysisService
 // This allows us to easily switch between local storage and Supabase
 
 export const getAnalysisRecord = async (id: string) => {
@@ -16,20 +16,8 @@ export const getAnalysisRecord = async (id: string) => {
   }
 };
 
-export const getAnalysisHistory = async () => {
-  try {
-    return await getAnalysisHistory();
-  } catch (error) {
-    console.error("Error fetching analysis history:", error);
-    return [];
-  }
-};
+// Import the actual function from analysisService, don't redefine
+export { getAnalysisHistory } from "./analysisService";
 
-export const removeAnalysisRecord = async (id: string) => {
-  try {
-    return await removeAnalysisRecord(id);
-  } catch (error) {
-    console.error("Error removing analysis record:", error);
-    return false;
-  }
-};
+// Import the actual function from analysisService, don't redefine
+export { removeAnalysisRecord } from "./analysisService";
