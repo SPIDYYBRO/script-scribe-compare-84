@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,14 +9,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Upload } from "lucide-react";
 
 export default function ProfileSettings() {
-  const { user, updateProfile } = useAuth();
+  const { user, profile, updateProfile } = useAuth();
   const { toast } = useToast();
   
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [phone, setPhone] = useState(user?.phone || "");
-  const [photo, setPhoto] = useState<string | undefined>(user?.photoUrl);
+  const [name, setName] = useState(profile?.name || "");
+  const [email, setEmail] = useState(profile?.email || "");
+  const [phone, setPhone] = useState(profile?.phone || "");
+  const [photo, setPhoto] = useState<string | undefined>(profile?.photo_url);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update form when profile changes
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || "");
+      setEmail(profile.email || "");
+      setPhone(profile.phone || "");
+      setPhoto(profile.photo_url || undefined);
+    }
+  }, [profile]);
   
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,22 +44,12 @@ export default function ProfileSettings() {
     try {
       await updateProfile({
         name,
+        email,
         phone,
-        photoUrl: photo,
-        email: user?.email !== email ? email : undefined
-      });
-      
-      toast({
-        title: "Profile updated",
-        description: "Your profile information has been saved.",
+        photo_url: photo
       });
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Update failed",
-        description: "There was an error updating your profile.",
-        variant: "destructive"
-      });
     } finally {
       setIsSubmitting(false);
     }

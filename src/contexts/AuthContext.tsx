@@ -1,17 +1,21 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
-// Define an extended user type with our custom fields
-interface ExtendedUser extends User {
-  name: string;
-  photoUrl: string;
+interface Profile {
+  id: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  photo_url: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface AuthContextType {
-  user: ExtendedUser | null;
+  user: User | null;
+  profile: Profile | null;
   session: Session | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -19,41 +23,53 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginWithPhone: (phone: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (data: { name?: string; phone?: string; photoUrl?: string; email?: string }) => Promise<void>;
+  updateProfile: (data: { name?: string; email?: string; phone?: string; photo_url?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper function to transform User to ExtendedUser with our custom fields
-const transformUser = (user: User | null): ExtendedUser | null => {
-  if (!user) return null;
-
-  return {
-    ...user,
-    name: user.user_metadata?.name || '',
-    photoUrl: user.user_metadata?.photo_url || '',
-  };
-};
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
-        setUser(transformUser(session?.user ?? null));
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(transformUser(session?.user ?? null));
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      }
       setIsLoading(false);
     });
 
@@ -141,28 +157,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateProfile = async (data: { name?: string; phone?: string; photoUrl?: string; email?: string }) => {
+  const updateProfile = async (data: { name?: string; email?: string; phone?: string; photo_url?: string }) => {
+    if (!user) throw new Error('No user logged in');
+    
     setIsLoading(true);
     try {
-      const updates: { data?: Record<string, any>; email?: string } = {};
-      
-      // Handle email update separately
-      if (data.email) {
-        updates.email = data.email;
+      // Update email in auth if it has changed
+      if (data.email && data.email !== user.email) {
+        const { error: emailError } = await supabase.auth.updateUser({ email: data.email });
+        if (emailError) throw emailError;
       }
       
-      // Handle metadata updates
-      const metadata: Record<string, any> = {};
-      if (data.name) metadata.name = data.name;
-      if (data.phone) metadata.phone = data.phone;
-      if (data.photoUrl) metadata.photo_url = data.photoUrl;
+      // Update profile in the profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update(data)
+        .eq('id', user.id);
+        
+      if (profileError) throw profileError;
       
-      if (Object.keys(metadata).length > 0) {
-        updates.data = metadata;
-      }
-      
-      const { error } = await supabase.auth.updateUser(updates);
-      if (error) throw error;
+      // Refresh profile data
+      await fetchProfile(user.id);
       
       toast({
         title: "Profile updated",
@@ -170,6 +185,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (error) {
       console.error('Error updating profile:', error);
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive"
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -180,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider 
       value={{ 
         user, 
+        profile,
         session,
         isLoading, 
         login, 
