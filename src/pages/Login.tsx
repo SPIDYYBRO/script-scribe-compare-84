@@ -2,6 +2,7 @@
 import AuthForm from "@/components/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const { user, isLoading } = useAuth();
@@ -21,9 +22,16 @@ export default function Login() {
           </p>
         </div>
         
-        <div className="bg-white p-8 rounded-lg shadow-lg border">
-          <AuthForm />
-        </div>
+        {isLoading ? (
+          <div className="bg-white p-8 rounded-lg shadow-lg border flex flex-col items-center justify-center">
+            <Loader2 className="h-8 w-8 text-scriptGreen animate-spin mb-4" />
+            <p className="text-muted-foreground">Authenticating...</p>
+          </div>
+        ) : (
+          <div className="bg-white p-8 rounded-lg shadow-lg border">
+            <AuthForm />
+          </div>
+        )}
       </div>
     </div>
   );
