@@ -1,12 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Define a type for the analysis record to help with type checking
+// Define the AnalysisRecord interface to match the database schema
 export interface AnalysisRecord {
   id: string;
-  user_id: string;
+  user_id: string | null;
   image_url: string;
-  comparison_type: 'font' | 'image';
+  comparison_type: string;
   comparison_target: string;
   similarity_score: number;
   analysis_data: any;
@@ -20,11 +20,9 @@ export const saveAnalysisResult = async (
   similarityScore: number,
   analysisData: any
 ) => {
-  // Add user_id to the data being inserted
   const { data: authData } = await supabase.auth.getUser();
   const userId = authData?.user?.id;
   
-  // Using the generic query method to bypass type checking
   const { data, error } = await supabase
     .from('analysis_records')
     .insert({
@@ -43,7 +41,6 @@ export const saveAnalysisResult = async (
 };
 
 export const getAnalysisHistory = async () => {
-  // Using the generic query method to bypass type checking
   const { data, error } = await supabase
     .from('analysis_records')
     .select('*')

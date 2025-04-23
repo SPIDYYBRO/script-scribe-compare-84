@@ -16,8 +16,5 @@ export const getAnalysisRecord = async (id: string) => {
   }
 };
 
-// Import the actual function from analysisService, don't redefine
 export { getAnalysisHistory } from "./analysisService";
-
-// Import the actual function from analysisService, don't redefine
 export { removeAnalysisRecord } from "./analysisService";

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,6 @@ export default function HistoryList() {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Load history on mount and when items are deleted
   useEffect(() => {
     const loadHistory = async () => {
       try {
@@ -136,7 +134,7 @@ export default function HistoryList() {
               <div className="flex flex-col sm:flex-row">
                 <div className="w-full sm:w-36 h-36 bg-muted flex items-center justify-center">
                   <img 
-                    src={item.imageUrl} 
+                    src={item.image_url} 
                     alt="Handwriting sample" 
                     className="h-full w-full object-cover"
                   />
@@ -144,25 +142,25 @@ export default function HistoryList() {
                 <CardContent className="flex-1 p-4">
                   <div className="flex flex-col sm:flex-row justify-between mb-2">
                     <div>
-                      <h3 className="font-medium">{formatDate(item.date)}</h3>
+                      <h3 className="font-medium">{formatDate(item.created_at)}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Compared to {item.comparisonTarget}
+                        Compared to {item.comparison_target}
                       </p>
                     </div>
                     <div className="mt-2 sm:mt-0">
                       <span className={`font-bold ${
-                        item.similarityScore >= 80 ? "text-green-500" : 
-                        item.similarityScore >= 60 ? "text-yellow-500" : 
+                        item.similarity_score >= 80 ? "text-green-500" : 
+                        item.similarity_score >= 60 ? "text-yellow-500" : 
                         "text-red-500"
                       }`}>
-                        {item.similarityScore}% Similarity
+                        {item.similarity_score}% Similarity
                       </span>
                     </div>
                   </div>
                   
                   <div className="flex justify-between items-center mt-4">
                     <span className="text-xs text-muted-foreground">
-                      {getExpiryMessage(item.date)}
+                      {getExpiryMessage(item.created_at)}
                     </span>
                     <div className="space-x-2">
                       <Button variant="outline" size="sm" asChild>
