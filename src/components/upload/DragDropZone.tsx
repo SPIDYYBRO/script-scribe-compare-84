@@ -16,7 +16,12 @@ export default function DragDropZone({ onFileDrop, isUploading }: DragDropZonePr
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onFileDrop(e.dataTransfer.files[0]);
+      const file = e.dataTransfer.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must not exceed 5MB');
+        return;
+      }
+      onFileDrop(file);
     }
   };
 
@@ -24,7 +29,12 @@ export default function DragDropZone({ onFileDrop, isUploading }: DragDropZonePr
     e.preventDefault();
     
     if (e.target.files && e.target.files.length > 0) {
-      onFileDrop(e.target.files[0]);
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must not exceed 5MB');
+        return;
+      }
+      onFileDrop(file);
     }
   };
 
@@ -48,7 +58,7 @@ export default function DragDropZone({ onFileDrop, isUploading }: DragDropZonePr
       <label htmlFor="file-upload" className="flex flex-col items-center justify-center h-full cursor-pointer">
         <Upload className="h-10 w-10 text-scriptGreen mb-2" />
         <p className="text-sm font-medium mb-1">Drag & drop or click to upload</p>
-        <p className="text-xs text-muted-foreground">PNG, JPG or JPEG</p>
+        <p className="text-xs text-muted-foreground">PNG, JPG or JPEG (max 5MB)</p>
         <input
           id="file-upload"
           name="file-upload"

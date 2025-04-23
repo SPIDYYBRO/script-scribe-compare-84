@@ -1,25 +1,27 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const uploadImage = async (file: File, onProgress?: (progress: number) => void): Promise<string> => {
-  // Resize the image before uploading if it's too large
-  const resizedFile = await resizeImageIfNeeded(file);
+  // Check file size before processing
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('File size exceeds 5MB limit');
+  }
+
+  // Only resize if it's an image
+  const resizedFile = file.type.startsWith('image/') ? 
+    await resizeImageIfNeeded(file) : 
+    file;
   
   const fileExt = resizedFile.name.split('.').pop();
   const fileName = `${Math.random()}.${fileExt}`;
   const filePath = `${fileName}`;
 
-  // Upload with progress tracking
   const { data, error } = await supabase.storage
     .from('handwriting-samples')
     .upload(filePath, resizedFile, {
       cacheControl: '3600',
-      upsert: true, // Use upsert to replace any existing file
-      onUploadProgress: (progress) => {
-        if (onProgress) {
-          const percent = progress.loaded / progress.total * 100;
-          onProgress(percent);
-        }
-      }
+      upsert: true
     });
 
   if (error) {
@@ -35,25 +37,18 @@ export const uploadImage = async (file: File, onProgress?: (progress: number) =>
 };
 
 const resizeImageIfNeeded = async (file: File): Promise<File> => {
-  // If file is not an image, return it as is
-  if (!file.type.startsWith('image/')) {
-    return file;
-  }
-
-  // Create an image element to load the file
   const img = new Image();
   const imgPromise = new Promise<HTMLImageElement>((resolve) => {
     img.onload = () => resolve(img);
     img.src = URL.createObjectURL(file);
   });
 
-  // Wait for the image to load
   const loadedImg = await imgPromise;
   
   // Calculate new dimensions (maintain aspect ratio)
   let width = loadedImg.width;
   let height = loadedImg.height;
-  const maxDimension = 1600; // Increased max dimension
+  const maxDimension = 1024; // Reduced for faster processing
 
   if (width > height && width > maxDimension) {
     height = Math.round((height * maxDimension) / width);
@@ -63,24 +58,23 @@ const resizeImageIfNeeded = async (file: File): Promise<File> => {
     height = maxDimension;
   }
 
-  // Draw the resized image to a canvas
+  // Create canvas and draw image
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   ctx?.drawImage(loadedImg, 0, 0, width, height);
   
-  // Clean up object URL
+  // Clean up
   URL.revokeObjectURL(img.src);
   
-  // Convert canvas to blob and then to File with higher quality
+  // Convert to blob with optimal settings for size/quality balance
   const blob = await new Promise<Blob>((resolve) => {
     canvas.toBlob((b) => {
       if (b) resolve(b);
       else resolve(new Blob([]));
-    }, file.type, 0.92); // Increased quality to 0.92
+    }, file.type, 0.8); // Reduced quality for faster upload
   });
   
-  // Create a new file with the same name but resized content
   return new File([blob], file.name, { type: file.type });
 };
