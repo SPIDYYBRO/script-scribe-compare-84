@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { User, Mail, Phone, Google } from "lucide-react";
+import { User, Mail, Phone, LogIn } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 type AuthMode = "login" | "register" | "phone";
@@ -234,7 +234,7 @@ export default function AuthForm() {
             onClick={handleGoogleLogin}
             disabled={isSubmitting}
           >
-            <Google className="mr-2 h-4 w-4" />
+            <LogIn className="mr-2 h-4 w-4" />
             Google
           </Button>
         </TabsContent>
@@ -307,7 +307,7 @@ export default function AuthForm() {
             onClick={handleGoogleLogin}
             disabled={isSubmitting}
           >
-            <Google className="mr-2 h-4 w-4" />
+            <LogIn className="mr-2 h-4 w-4" />
             Google
           </Button>
         </TabsContent>
