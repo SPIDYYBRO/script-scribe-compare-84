@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,56 +15,35 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-// Mock history data
-const mockHistoryItems = [
-  {
-    id: "analysis-1",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-    image: "/placeholder.svg",
-    comparisonType: "font",
-    comparisonTarget: "Times New Roman",
-    similarityScore: 68,
-  },
-  {
-    id: "analysis-2",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
-    image: "/placeholder.svg",
-    comparisonType: "font",
-    comparisonTarget: "Arial",
-    similarityScore: 72,
-  },
-  {
-    id: "analysis-3",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), // 10 days ago
-    image: "/placeholder.svg",
-    comparisonType: "image",
-    comparisonTarget: "Custom Image",
-    similarityScore: 85,
-  },
-  {
-    id: "analysis-4",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20), // 20 days ago
-    image: "/placeholder.svg",
-    comparisonType: "font",
-    comparisonTarget: "Times New Roman",
-    similarityScore: 65,
-  },
-  {
-    id: "analysis-5",
-    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 28), // 28 days ago
-    image: "/placeholder.svg",
-    comparisonType: "font",
-    comparisonTarget: "Helvetica",
-    similarityScore: 70,
-  }
-];
+import { getAnalysisHistory, removeAnalysisRecord } from "@/utils/storageService";
 
 export default function HistoryList() {
   const { toast } = useToast();
-  const [historyItems, setHistoryItems] = useState(mockHistoryItems);
+  const [historyItems, setHistoryItems] = useState<any[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Load history on mount and when items are deleted
+  useEffect(() => {
+    const loadHistory = () => {
+      try {
+        const history = getAnalysisHistory();
+        setHistoryItems(history);
+      } catch (error) {
+        console.error("Failed to load history:", error);
+        toast({
+          title: "Error loading history",
+          description: "There was a problem retrieving your analysis history.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadHistory();
+  }, [toast]);
   
   const deleteItem = (id: string) => {
     setItemToDelete(id);
@@ -73,17 +52,29 @@ export default function HistoryList() {
 
   const confirmDelete = () => {
     if (itemToDelete) {
-      setHistoryItems(historyItems.filter(item => item.id !== itemToDelete));
-      toast({
-        title: "Analysis deleted",
-        description: "The analysis has been removed from your history.",
-      });
-      setDeleteDialogOpen(false);
-      setItemToDelete(null);
+      try {
+        removeAnalysisRecord(itemToDelete);
+        setHistoryItems(historyItems.filter(item => item.id !== itemToDelete));
+        toast({
+          title: "Analysis deleted",
+          description: "The analysis has been removed from your history.",
+        });
+      } catch (error) {
+        console.error("Failed to delete item:", error);
+        toast({
+          title: "Delete failed",
+          description: "There was a problem deleting the analysis.",
+          variant: "destructive",
+        });
+      } finally {
+        setDeleteDialogOpen(false);
+        setItemToDelete(null);
+      }
     }
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
@@ -93,9 +84,10 @@ export default function HistoryList() {
     }).format(date);
   };
 
-  const getExpiryMessage = (date: Date) => {
+  const getExpiryMessage = (dateString: string) => {
     const currentDate = new Date();
-    const expiryDate = new Date(date);
+    const analysisDate = new Date(dateString);
+    const expiryDate = new Date(analysisDate);
     expiryDate.setDate(expiryDate.getDate() + 30); // 30 days retention
     
     const daysUntilExpiry = Math.ceil((expiryDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -106,6 +98,14 @@ export default function HistoryList() {
       return `Expires in ${daysUntilExpiry} days`;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto flex justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-scriptGreen"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -135,7 +135,7 @@ export default function HistoryList() {
               <div className="flex flex-col sm:flex-row">
                 <div className="w-full sm:w-36 h-36 bg-muted flex items-center justify-center">
                   <img 
-                    src={item.image} 
+                    src={item.imageUrl} 
                     alt="Handwriting sample" 
                     className="h-full w-full object-cover"
                   />

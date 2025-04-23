@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
+import AnalysisResult from "./pages/AnalysisResult";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { FontProvider } from "./contexts/FontContext";
@@ -31,6 +32,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/history" element={<History />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/analysis/:id" element={<AnalysisResult />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

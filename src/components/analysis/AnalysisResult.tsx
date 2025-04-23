@@ -1,56 +1,32 @@
 
+import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useFont } from "@/contexts/FontContext";
-
-// Mock analysis result data
-const mockAnalysisData = {
-  similarity: 68,
-  characterSpacing: 82,
-  lineConsistency: 75,
-  characterFormation: 65,
-  pressure: 90,
-  slant: 73,
-  details: [
-    {
-      character: "a",
-      similarityScore: 72,
-      notes: "Your 'a' has more rounded loops than the comparison."
-    },
-    {
-      character: "e",
-      similarityScore: 85,
-      notes: "Your 'e' is very similar to the comparison."
-    },
-    {
-      character: "t",
-      similarityScore: 60,
-      notes: "Your 't' crossbar is positioned higher than the standard."
-    },
-    {
-      character: "r",
-      similarityScore: 55,
-      notes: "Your 'r' has a distinct style that differs from the standard."
-    },
-    {
-      character: "s",
-      similarityScore: 78,
-      notes: "Your 's' has good consistency with the comparison."
-    }
-  ]
-};
+import { getAnalysisRecord } from "@/utils/storageService";
 
 interface AnalysisResultProps {
-  // In a real app, this would receive actual analysis data
   analysisId?: string;
 }
 
 export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
-  const { fontName } = useFont();
+  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
-  // Normally would fetch data based on analysisId
-  const analysisData = mockAnalysisData;
+  useEffect(() => {
+    if (analysisId) {
+      const record = getAnalysisRecord(analysisId);
+      if (record) {
+        setAnalysisData({
+          ...record.analysisData,
+          comparisonTarget: record.comparisonTarget,
+          date: new Date(record.date),
+          imageUrl: record.imageUrl
+        });
+      }
+    }
+    setLoading(false);
+  }, [analysisId]);
   
   const getScoreColor = (score: number) => {
     if (score >= 80) return "bg-green-500";
@@ -58,9 +34,55 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
     return "bg-red-500";
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-scriptGreen"></div>
+      </div>
+    );
+  }
+
+  if (!analysisData) {
+    // If no analysis ID was provided, use mock data for display
+    return (
+      <div className="max-w-4xl mx-auto text-center py-8">
+        <h2 className="text-2xl font-bold mb-4">No Analysis Data</h2>
+        <p className="text-muted-foreground">
+          Please upload a handwriting sample to analyze.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Analysis Results</h2>
+      <div className="flex flex-col md:flex-row gap-6 mb-8">
+        <div className="w-full md:w-1/2">
+          <h3 className="text-lg font-medium mb-2">Your Handwriting Sample</h3>
+          <div className="bg-muted rounded-md overflow-hidden">
+            <img 
+              src={analysisData.imageUrl} 
+              alt="Your handwriting sample" 
+              className="w-full h-auto object-contain max-h-[300px]"
+            />
+          </div>
+        </div>
+        
+        <div className="w-full md:w-1/2">
+          <h3 className="text-lg font-medium mb-2">Compared with {analysisData.comparisonTarget}</h3>
+          <div className="bg-muted rounded-md h-[300px] flex items-center justify-center p-4">
+            {analysisData.comparisonTarget === "Custom Image" ? (
+              <p className="text-muted-foreground">Custom comparison image</p>
+            ) : (
+              <p className={`text-center text-lg font-${analysisData.comparisonTarget.toLowerCase().includes('times') ? 'times' : 
+                analysisData.comparisonTarget.toLowerCase().includes('arial') ? 'arial' :
+                analysisData.comparisonTarget.toLowerCase().includes('calibri') ? 'calibri' : 'helvetica'}`}>
+                The quick brown fox jumps over the lazy dog
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
       
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8">
@@ -74,24 +96,24 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
               <CardTitle className="flex justify-between items-center">
                 <span>Overall Similarity Score</span>
                 <span className={`text-2xl font-bold ${
-                  analysisData.similarity >= 80 ? "text-green-500" : 
-                  analysisData.similarity >= 60 ? "text-yellow-500" : 
+                  analysisData.similarityScore >= 80 ? "text-green-500" : 
+                  analysisData.similarityScore >= 60 ? "text-yellow-500" : 
                   "text-red-500"
                 }`}>
-                  {analysisData.similarity}%
+                  {analysisData.similarityScore}%
                 </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="w-full bg-muted rounded-full h-4 mb-6">
                 <div 
-                  className={`h-4 rounded-full ${getScoreColor(analysisData.similarity)}`} 
-                  style={{ width: `${analysisData.similarity}%` }}
+                  className={`h-4 rounded-full ${getScoreColor(analysisData.similarityScore)}`} 
+                  style={{ width: `${analysisData.similarityScore}%` }}
                 />
               </div>
               
               <p className="text-sm text-muted-foreground mb-4">
-                Your handwriting has been analyzed against {fontName}. Here's a breakdown of various attributes:
+                Your handwriting has been analyzed against {analysisData.comparisonTarget}. Here's a breakdown of various attributes:
               </p>
               
               <div className="space-y-4">
@@ -144,14 +166,19 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
             </CardHeader>
             <CardContent>
               <p className="text-sm">
-                Your handwriting shows a {analysisData.similarity}% similarity to {fontName}. 
-                You have excellent pressure consistency, indicating confident writing. 
-                Your character spacing and line consistency are good, but there's room for improvement 
-                in character formation, particularly with letters like 'r' and 't'.
+                Your handwriting shows a {analysisData.similarityScore}% similarity to {analysisData.comparisonTarget}. 
+                You have excellent pressure consistency ({analysisData.pressure}%), indicating confident writing. 
+                {analysisData.characterSpacing > 70 ? ' Your character spacing is good, ' : ' Your character spacing needs improvement, '}
+                {analysisData.lineConsistency > 70 ? ' and your line consistency is excellent.' : ' and your line consistency could be improved.'}
               </p>
+              
               <p className="text-sm mt-4">
-                For improved similarity to {fontName}, focus on maintaining consistent slant angles 
-                and practicing the character formations highlighted in the details tab.
+                {analysisData.similarityScore >= 80 ? 
+                  `Your handwriting is highly similar to ${analysisData.comparisonTarget}. With continued practice, you can maintain this excellent level of consistency.` :
+                  analysisData.similarityScore >= 60 ?
+                  `For improved similarity to ${analysisData.comparisonTarget}, focus on maintaining consistent slant angles and practicing character formations highlighted in the details tab.` :
+                  `Your handwriting differs significantly from ${analysisData.comparisonTarget}. Regular practice with focus on character formation and spacing would help improve similarity.`
+                }
               </p>
             </CardContent>
           </Card>
@@ -164,7 +191,7 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {analysisData.details.map((detail, index) => (
+                {analysisData.details.map((detail: any, index: number) => (
                   <div key={index} className="border-b pb-4 last:border-b-0 last:pb-0">
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="text-lg font-medium">Letter: '{detail.character}'</h4>

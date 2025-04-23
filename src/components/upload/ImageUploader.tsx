@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -12,18 +12,26 @@ import {
 import { Image, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useFont, FontChoice } from "@/contexts/FontContext";
+import { analyzeHandwriting, generateAnalysisId } from "@/utils/handwritingAnalysis";
+import { saveAnalysisRecord } from "@/utils/storageService";
+import { useNavigate } from "react-router-dom";
 
 type ComparisonType = "font" | "image";
 
 export default function ImageUploader() {
   const { toast } = useToast();
   const { font, fontName } = useFont();
+  const navigate = useNavigate();
   
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [comparisonImage, setComparisonImage] = useState<string | null>(null);
   const [comparisonType, setComparisonType] = useState<ComparisonType>("font");
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const comparisonFileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle file drop
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -49,7 +57,16 @@ export default function ImageUploader() {
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
-        description: "Please upload an image file.",
+        description: "Please upload an image file (JPEG, PNG, etc.).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB.",
         variant: "destructive",
       });
       return;
@@ -87,7 +104,16 @@ export default function ImageUploader() {
       if (!file.type.startsWith('image/')) {
         toast({
           title: "Invalid file type",
-          description: "Please upload an image file.",
+          description: "Please upload an image file (JPEG, PNG, etc.).",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB.",
           variant: "destructive",
         });
         return;
@@ -117,22 +143,80 @@ export default function ImageUploader() {
   const resetUpload = () => {
     setUploadedImage(null);
     setComparisonImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (comparisonFileInputRef.current) comparisonFileInputRef.current.value = '';
   };
 
   const startAnalysis = () => {
-    // In a real app, this would send the images for processing
+    if (!uploadedImage) {
+      toast({
+        title: "No handwriting sample",
+        description: "Please upload a handwriting sample to analyze.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (comparisonType === "image" && !comparisonImage) {
+      toast({
+        title: "No comparison image",
+        description: "Please upload an image to compare against.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
     toast({
       title: "Analysis started",
       description: "Your handwriting is being analyzed. This might take a moment.",
     });
     
-    // Mock analysis delay
+    // In a real app, this would be an API call to a machine learning service
+    // For this demo, we'll use a simulated analysis with a delay
     setTimeout(() => {
-      toast({
-        title: "Analysis complete",
-        description: "Your handwriting analysis is ready.",
-      });
-    }, 2000);
+      try {
+        // Perform the analysis
+        const analysisResult = analyzeHandwriting(
+          uploadedImage,
+          comparisonType,
+          comparisonType === "image" ? comparisonImage || undefined : undefined,
+          comparisonType === "font" ? font : undefined
+        );
+        
+        // Generate a unique ID for this analysis
+        const analysisId = generateAnalysisId();
+        
+        // Save the analysis to history
+        saveAnalysisRecord({
+          id: analysisId,
+          date: new Date().toISOString(),
+          imageUrl: uploadedImage,
+          comparisonType: comparisonType,
+          comparisonTarget: comparisonType === "font" ? fontName : "Custom Image",
+          similarityScore: analysisResult.similarityScore,
+          analysisData: analysisResult
+        });
+        
+        setIsAnalyzing(false);
+        
+        toast({
+          title: "Analysis complete",
+          description: "Your handwriting analysis is ready to view.",
+        });
+        
+        // Navigate to the analysis result page
+        navigate(`/analysis/${analysisId}`);
+      } catch (error) {
+        console.error("Analysis error:", error);
+        setIsAnalyzing(false);
+        toast({
+          title: "Analysis failed",
+          description: "There was a problem analyzing your handwriting. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }, 2000); // Simulate processing time
   };
 
   return (
@@ -147,7 +231,7 @@ export default function ImageUploader() {
 
             {!uploadedImage ? (
               <div
-                className={`upload-zone ${dragActive ? 'border-scriptGreen ring-1 ring-scriptGreen' : ''}`}
+                className={`upload-zone h-64 ${dragActive ? 'border-scriptGreen ring-1 ring-scriptGreen' : ''}`}
                 onDragOver={(e) => { 
                   e.preventDefault(); 
                   setDragActive(true); 
@@ -162,7 +246,7 @@ export default function ImageUploader() {
                 }}
                 onDrop={handleDrop}
               >
-                <label htmlFor="file-upload" className="flex flex-col items-center cursor-pointer">
+                <label htmlFor="file-upload" className="flex flex-col items-center justify-center h-full cursor-pointer">
                   <Upload className="h-10 w-10 text-scriptGreen mb-2" />
                   <p className="text-sm font-medium mb-1">
                     {isUploading ? "Uploading..." : "Drag & drop or click to upload"}
@@ -171,6 +255,7 @@ export default function ImageUploader() {
                   <input
                     id="file-upload"
                     name="file-upload"
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     className="sr-only"
@@ -180,11 +265,11 @@ export default function ImageUploader() {
                 </label>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative h-64">
                 <img
                   src={uploadedImage}
                   alt="Uploaded handwriting sample"
-                  className="w-full h-auto rounded-md object-cover max-h-[300px]"
+                  className="w-full h-full rounded-md object-contain bg-muted/50"
                 />
                 <Button
                   variant="outline"
@@ -209,7 +294,10 @@ export default function ImageUploader() {
             <div className="mb-4">
               <Select 
                 value={comparisonType} 
-                onValueChange={(value) => setComparisonType(value as ComparisonType)}
+                onValueChange={(value) => {
+                  setComparisonType(value as ComparisonType);
+                  setComparisonImage(null);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select comparison type" />
@@ -222,16 +310,16 @@ export default function ImageUploader() {
             </div>
 
             {comparisonType === "font" ? (
-              <div className={`handwriting-sample font-${font} flex items-center justify-center`}>
-                <p className="text-center text-lg">
+              <div className={`handwriting-sample font-${font} flex items-center justify-center h-[220px] text-center`}>
+                <p className="text-lg px-4">
                   The quick brown fox jumps over the lazy dog
                 </p>
               </div>
             ) : (
               <>
                 {!comparisonImage ? (
-                  <div className="upload-zone">
-                    <label htmlFor="comparison-upload" className="flex flex-col items-center cursor-pointer">
+                  <div className="upload-zone h-[220px]">
+                    <label htmlFor="comparison-upload" className="flex flex-col items-center justify-center h-full cursor-pointer">
                       <Image className="h-10 w-10 text-scriptGreen mb-2" />
                       <p className="text-sm font-medium mb-1">
                         Upload comparison image
@@ -240,6 +328,7 @@ export default function ImageUploader() {
                       <input
                         id="comparison-upload"
                         name="comparison-upload"
+                        ref={comparisonFileInputRef}
                         type="file"
                         accept="image/*"
                         className="sr-only"
@@ -248,11 +337,11 @@ export default function ImageUploader() {
                     </label>
                   </div>
                 ) : (
-                  <div className="relative">
+                  <div className="relative h-[220px]">
                     <img
                       src={comparisonImage}
                       alt="Comparison image"
-                      className="w-full h-auto rounded-md object-cover max-h-[300px]"
+                      className="w-full h-full rounded-md object-contain bg-muted/50"
                     />
                     <Button
                       variant="outline"
@@ -273,10 +362,10 @@ export default function ImageUploader() {
       <div className="flex justify-center">
         <Button 
           className="bg-scriptGreen hover:bg-scriptGreen/90 px-8"
-          disabled={!uploadedImage || (comparisonType === "image" && !comparisonImage)}
+          disabled={!uploadedImage || (comparisonType === "image" && !comparisonImage) || isAnalyzing}
           onClick={startAnalysis}
         >
-          Analyze Handwriting
+          {isAnalyzing ? "Analyzing..." : "Analyze Handwriting"}
         </Button>
       </div>
     </div>
