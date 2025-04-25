@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAnalysisById, type AnalysisRecord } from "@/utils/analysisService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, Lightbulb } from "lucide-react";
+import { Ruler, Square, Pen, Grip, Baseline, Lightbulb, Info } from "lucide-react";
 
 interface AnalysisResultProps {
   analysisId?: string;
@@ -26,6 +25,13 @@ interface EnhancedAnalysisData {
     similarityScore: number;
     notes: string;
   }>;
+  strokeAnalysis: any;
+  gripAnalysis: any;
+  baselineAnalysis: any;
+  spacingAnalysis: any;
+  pressureAnalysis: any;
+  formationAnalysis: any;
+  characterDetails: any;
 }
 
 export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
@@ -118,6 +124,44 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
     );
   }
 
+  const renderAnalysisSection = (title: string, data: any, icon: React.ReactNode) => (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          {icon}
+          <span>{title}</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {Object.entries(data).map(([key, value]: [string, any]) => {
+            if (key === 'details') return null;
+            return (
+              <div key={key} className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                  <span className="text-sm font-medium">{value}%</span>
+                </div>
+                <Progress value={value as number} className="h-2" />
+              </div>
+            );
+          })}
+          {data.details && (
+            <Alert className="mt-4 bg-muted">
+              <AlertDescription>
+                <ul className="list-disc pl-4 space-y-1">
+                  {data.details.map((detail: string, index: number) => (
+                    <li key={index} className="text-sm">{detail}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex flex-col md:flex-row gap-6 mb-8">
@@ -148,161 +192,44 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
         </div>
       </div>
       
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs defaultValue="technical" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="details">Character Details</TabsTrigger>
-          <TabsTrigger value="improvement">Improvement Tips</TabsTrigger>
+          <TabsTrigger value="technical">Technical Analysis</TabsTrigger>
+          <TabsTrigger value="formation">Letter Formation</TabsTrigger>
+          <TabsTrigger value="improve">Improvement Plan</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="overview" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                <span>Overall Similarity Score</span>
-                <span className={`text-2xl font-bold ${
-                  analysisData.similarityScore >= 80 ? "text-green-500" : 
-                  analysisData.similarityScore >= 60 ? "text-yellow-500" : 
-                  "text-red-500"
-                }`}>
-                  {analysisData.similarityScore}%
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="w-full bg-muted rounded-full h-4 mb-6">
-                <div 
-                  className={`h-4 rounded-full ${getScoreColor(analysisData.similarityScore)}`} 
-                  style={{ width: `${analysisData.similarityScore}%` }}
-                />
-              </div>
-              
-              <p className="text-sm text-muted-foreground mb-4">
-                Your handwriting has been analyzed against {analysisData.comparisonTarget}. Here's a breakdown of various attributes:
-              </p>
-              
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Character Spacing</span>
-                    <span className="text-sm font-medium">{analysisData.characterSpacing}%</span>
-                  </div>
-                  <Progress value={analysisData.characterSpacing} className="h-2" />
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Line Consistency</span>
-                    <span className="text-sm font-medium">{analysisData.lineConsistency}%</span>
-                  </div>
-                  <Progress value={analysisData.lineConsistency} className="h-2" />
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Character Formation</span>
-                    <span className="text-sm font-medium">{analysisData.characterFormation}%</span>
-                  </div>
-                  <Progress value={analysisData.characterFormation} className="h-2" />
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Pressure Consistency</span>
-                    <span className="text-sm font-medium">{analysisData.pressure}%</span>
-                  </div>
-                  <Progress value={analysisData.pressure} className="h-2" />
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Writing Slant</span>
-                    <span className="text-sm font-medium">{analysisData.slant}%</span>
-                  </div>
-                  <Progress value={analysisData.slant} className="h-2" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Analysis Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">
-                Your handwriting shows a {analysisData.similarityScore}% similarity to {analysisData.comparisonTarget}. 
-                You have excellent pressure consistency ({analysisData.pressure}%), indicating confident writing. 
-                {analysisData.characterSpacing > 70 ? ' Your character spacing is good, ' : ' Your character spacing needs improvement, '}
-                {analysisData.lineConsistency > 70 ? ' and your line consistency is excellent.' : ' and your line consistency could be improved.'}
-              </p>
-              
-              <p className="text-sm mt-4">
-                {analysisData.similarityScore >= 80 ? 
-                  `Your handwriting is highly similar to ${analysisData.comparisonTarget}. With continued practice, you can maintain this excellent level of consistency.` :
-                  analysisData.similarityScore >= 60 ?
-                  `For improved similarity to ${analysisData.comparisonTarget}, focus on maintaining consistent slant angles and practicing character formations highlighted in the details tab.` :
-                  `Your handwriting differs significantly from ${analysisData.comparisonTarget}. Regular practice with focus on character formation and spacing would help improve similarity.`
-                }
-              </p>
-
-              <Alert className="mt-6 bg-blue-50 border-blue-200">
-                <Info className="h-4 w-4 text-blue-500" />
-                <AlertDescription className="text-sm text-blue-700">
-                  <strong>Expert Analysis:</strong> Your writing shows {
-                    analysisData.pressure > analysisData.characterFormation ? "strength in pressure control but could benefit from more focus on letter formation" :
-                    "good attention to letter shapes but could benefit from more consistent pressure"
-                  }. The {
-                    analysisData.slant < 65 ? "inconsistent slant" : "consistent slant"
-                  } in your writing {
-                    analysisData.slant < 65 ? "suggests you may change writing positions frequently" : "indicates a stable writing position"
-                  }.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
+        <TabsContent value="technical" className="space-y-6">
+          {renderAnalysisSection("Stroke Analysis", analysisData.strokeAnalysis, <Pen className="h-5 w-5" />)}
+          {renderAnalysisSection("Grip Analysis", analysisData.gripAnalysis, <Grip className="h-5 w-5" />)}
+          {renderAnalysisSection("Baseline Analysis", analysisData.baselineAnalysis, <Baseline className="h-5 w-5" />)}
+          {renderAnalysisSection("Spacing Analysis", analysisData.spacingAnalysis, <Square className="h-5 w-5" />)}
+          {renderAnalysisSection("Pressure Analysis", analysisData.pressureAnalysis, <Ruler className="h-5 w-5" />)}
         </TabsContent>
-        
-        <TabsContent value="details">
+
+        <TabsContent value="formation">
           <Card>
             <CardHeader>
-              <CardTitle>Character Analysis Details</CardTitle>
+              <CardTitle>Ascenders & Descenders Analysis</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {analysisData.details.map((detail: any, index: number) => (
-                  <div key={index} className="border-b pb-4 last:border-b-0 last:pb-0">
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-lg font-medium">Letter: '{detail.character}'</h4>
-                      <span className={`font-bold ${
-                        detail.similarityScore >= 80 ? "text-green-500" : 
-                        detail.similarityScore >= 60 ? "text-yellow-500" : 
-                        "text-red-500"
-                      }`}>
-                        {detail.similarityScore}%
-                      </span>
-                    </div>
-                    <Progress value={detail.similarityScore} className="h-2 mb-2" />
-                    <p className="text-sm text-muted-foreground">{detail.notes}</p>
-                    
-                    {detail.similarityScore < 70 && (
-                      <div className="mt-3 flex items-start gap-2 text-sm">
-                        <Lightbulb className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-muted-foreground">
-                          {detail.similarityScore < 50 
-                            ? `Try practicing letter '${detail.character}' using tracing exercises.` 
-                            : `Focus on the ${detail.character === 'i' || detail.character === 'j' ? 'dot placement and height' : 'curves and angles'} of this letter.`}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Ascenders</h3>
+                  {renderAnalysisSection("Ascender Formation", analysisData.formationAnalysis.ascenders, 
+                    <Pen className="h-5 w-5" />)}
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Descenders</h3>
+                  {renderAnalysisSection("Descender Formation", analysisData.formationAnalysis.descenders, 
+                    <Pen className="h-5 w-5" />)}
+                </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="improvement">
+        <TabsContent value="improve">
           <Card>
             <CardHeader>
               <CardTitle>Personalized Improvement Plan</CardTitle>
@@ -317,11 +244,11 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
                 {/* Priority Areas - Find the lowest two scores */}
                 {(() => {
                   const categories = [
-                    { name: "Character Spacing", key: "characterSpacing", score: analysisData.characterSpacing },
-                    { name: "Line Consistency", key: "lineConsistency", score: analysisData.lineConsistency },
-                    { name: "Character Formation", key: "characterFormation", score: analysisData.characterFormation },
-                    { name: "Pressure Consistency", key: "pressure", score: analysisData.pressure },
-                    { name: "Writing Slant", key: "slant", score: analysisData.slant }
+                    { name: "Character Spacing", key: "characterSpacing", score: analysisData.spacingAnalysis.letterSpacing },
+                    { name: "Line Consistency", key: "lineConsistency", score: analysisData.baselineAnalysis.consistency },
+                    { name: "Character Formation", key: "characterFormation", score: analysisData.formationAnalysis.ascenders.consistency },
+                    { name: "Pressure Consistency", key: "pressure", score: analysisData.pressureAnalysis.consistency },
+                    { name: "Writing Slant", key: "slant", score: analysisData.baselineAnalysis.angle }
                   ].sort((a, b) => a.score - b.score);
                   
                   const priorityAreas = categories.slice(0, 2);
