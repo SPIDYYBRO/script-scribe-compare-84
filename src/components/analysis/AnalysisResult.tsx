@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAnalysisById, type AnalysisRecord } from "@/utils/analysisService";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Ruler, Square, Pen, Grip, Baseline, Lightbulb, Info } from "lucide-react";
+import { getAnalysisById, type AnalysisRecord } from "@/utils/analysisService";
+import { Pen, Grip, Baseline, Square, Ruler, Lightbulb, Info } from "lucide-react";
 
 interface AnalysisResultProps {
   analysisId?: string;
