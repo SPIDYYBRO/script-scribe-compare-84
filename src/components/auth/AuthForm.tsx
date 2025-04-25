@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailLoginForm from "./EmailLoginForm";
 import RegisterForm from "./RegisterForm";
@@ -9,6 +9,17 @@ import SocialLogin from "./SocialLogin";
 export default function AuthForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("login");
+
+  // Reset submitting state if stuck for too long
+  useEffect(() => {
+    if (isSubmitting) {
+      const timer = setTimeout(() => {
+        setIsSubmitting(false);
+      }, 15000); // Reset after 15 seconds if still submitting
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitting]);
 
   return (
     <div className="w-full max-w-md mx-auto">

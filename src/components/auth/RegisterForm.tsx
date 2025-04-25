@@ -13,9 +13,12 @@ export default function RegisterForm({ isSubmitting }: { isSubmitting: boolean }
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [localSubmitting, setLocalSubmitting] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || localSubmitting) return;
+    
     if (!email || !password || !name) {
       toast({
         title: "Error",
@@ -25,21 +28,40 @@ export default function RegisterForm({ isSubmitting }: { isSubmitting: boolean }
       return;
     }
     
+    setLocalSubmitting(true);
+    
     try {
-      await register(email, password, name);
+      toast({
+        title: "Creating account",
+        description: "Please wait while we set up your account...",
+      });
+      
+      // Create a timeout promise
+      const registerPromise = register(email, password, name);
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Registration timed out after 15 seconds')), 15000);
+      });
+      
+      // Race the registration against the timeout
+      await Promise.race([registerPromise, timeoutPromise]);
+      
       toast({
         title: "Registration successful",
         description: "Welcome to Script-Check!",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         title: "Registration failed",
-        description: "Please check your information and try again.",
+        description: error.message || "Please check your information and try again.",
         variant: "destructive"
       });
+    } finally {
+      setLocalSubmitting(false);
     }
   };
+
+  const effectiveSubmitting = isSubmitting || localSubmitting;
 
   return (
     <form onSubmit={handleRegister} className="space-y-4">
@@ -54,7 +76,7 @@ export default function RegisterForm({ isSubmitting }: { isSubmitting: boolean }
             placeholder="John Doe"
             className="pl-10"
             required
-            disabled={isSubmitting}
+            disabled={effectiveSubmitting}
           />
         </div>
       </div>
@@ -70,7 +92,7 @@ export default function RegisterForm({ isSubmitting }: { isSubmitting: boolean }
             placeholder="name@example.com"
             className="pl-10"
             required
-            disabled={isSubmitting}
+            disabled={effectiveSubmitting}
           />
         </div>
       </div>
@@ -83,15 +105,15 @@ export default function RegisterForm({ isSubmitting }: { isSubmitting: boolean }
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
           required
-          disabled={isSubmitting}
+          disabled={effectiveSubmitting}
         />
       </div>
       <Button 
         type="submit" 
         className="w-full bg-scriptGreen hover:bg-scriptGreen/90"
-        disabled={isSubmitting}
+        disabled={effectiveSubmitting}
       >
-        {isSubmitting ? (
+        {effectiveSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Creating Account...

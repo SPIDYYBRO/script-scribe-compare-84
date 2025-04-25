@@ -8,35 +8,66 @@ export const uploadImage = async (file: File, onProgress?: (progress: number) =>
     throw new Error('File size exceeds 5MB limit');
   }
 
-  // Only resize if it's an image
-  const resizedFile = file.type.startsWith('image/') ? 
-    await resizeImageIfNeeded(file) : 
-    file;
-  
-  const fileExt = resizedFile.name.split('.').pop();
-  const fileName = `${Math.random()}.${fileExt}`;
-  const filePath = `${fileName}`;
+  try {
+    // Report initial progress
+    onProgress && onProgress(10);
+    
+    // Only resize if it's an image
+    const resizedFile = file.type.startsWith('image/') ? 
+      await resizeImageIfNeeded(file, onProgress) : 
+      file;
+    
+    // Report progress after resize
+    onProgress && onProgress(50);
+    
+    const fileExt = resizedFile.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
 
-  const { data, error } = await supabase.storage
-    .from('handwriting-samples')
-    .upload(filePath, resizedFile, {
-      cacheControl: '3600',
-      upsert: true
+    // Add timeout handling
+    const uploadPromise = supabase.storage
+      .from('handwriting-samples')
+      .upload(filePath, resizedFile, {
+        cacheControl: '3600',
+        upsert: true
+      });
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Upload timed out after 30 seconds')), 30000);
     });
+    
+    // Race the upload against the timeout
+    const { data, error } = await Promise.race([
+      uploadPromise,
+      timeoutPromise.then(() => Promise.reject(new Error('Upload timed out')))
+    ]) as any;
 
-  if (error) {
-    console.error('Storage upload error:', error);
+    // Report progress after upload completes
+    onProgress && onProgress(90);
+
+    if (error) {
+      console.error('Storage upload error:', error);
+      throw error;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('handwriting-samples')
+      .getPublicUrl(filePath);
+
+    // Report completion
+    onProgress && onProgress(100);
+    
+    return publicUrl;
+  } catch (error) {
+    console.error('Upload error:', error);
     throw error;
   }
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('handwriting-samples')
-    .getPublicUrl(filePath);
-
-  return publicUrl;
 };
 
-const resizeImageIfNeeded = async (file: File): Promise<File> => {
+const resizeImageIfNeeded = async (file: File, onProgress?: (progress: number) => void): Promise<File> => {
+  onProgress && onProgress(20);
+  
   const img = new Image();
   const imgPromise = new Promise<HTMLImageElement>((resolve) => {
     img.onload = () => resolve(img);
@@ -44,6 +75,7 @@ const resizeImageIfNeeded = async (file: File): Promise<File> => {
   });
 
   const loadedImg = await imgPromise;
+  onProgress && onProgress(30);
   
   // Calculate new dimensions (maintain aspect ratio)
   let width = loadedImg.width;
@@ -64,6 +96,8 @@ const resizeImageIfNeeded = async (file: File): Promise<File> => {
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   ctx?.drawImage(loadedImg, 0, 0, width, height);
+  
+  onProgress && onProgress(40);
   
   // Clean up
   URL.revokeObjectURL(img.src);
