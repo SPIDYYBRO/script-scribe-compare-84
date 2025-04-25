@@ -1,3 +1,4 @@
+
 // Handwriting analysis utility functions
 
 export const analyzeHandwriting = (handwritingSample: string, comparisonType: string, comparisonSample?: string, comparisonFont?: string) => {
@@ -7,6 +8,9 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
     const pseudoRandom = Math.sin(seed) * 10000;
     return Math.min(100, Math.max(0, Math.floor(base + (pseudoRandom % variance))));
   };
+
+  // Calculate the overall similarity score
+  const overallSimilarityScore = generateScore(70, 30);
 
   // Primary Analysis Categories
   const strokeAnalysis = {
@@ -104,6 +108,7 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
   });
 
   return {
+    similarityScore: overallSimilarityScore,
     strokeAnalysis,
     gripAnalysis,
     baselineAnalysis,
@@ -134,3 +139,4 @@ const generateDetailedNotes = (letter: string, score: number) => {
 export const generateAnalysisId = () => {
   return 'analysis-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 };
+
