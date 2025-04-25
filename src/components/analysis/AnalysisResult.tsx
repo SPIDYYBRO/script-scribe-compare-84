@@ -4,34 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getAnalysisById, type AnalysisRecord } from "@/utils/analysisService";
-import { Pen, Grip, Baseline, Square, Ruler, Lightbulb, Info } from "lucide-react";
+import { Pen, Grip, Baseline, Square, Ruler, Lightbulb } from "lucide-react";
+import HandwritingSamples from "./HandwritingSamples";
+import FormationAnalysis from "./FormationAnalysis";
+import { type EnhancedAnalysisData } from "./types";
 
 interface AnalysisResultProps {
   analysisId?: string;
-}
-
-interface EnhancedAnalysisData {
-  comparisonTarget: string;
-  date: Date;
-  imageUrl: string;
-  similarityScore: number;
-  characterSpacing: number;
-  lineConsistency: number;
-  characterFormation: number;
-  pressure: number;
-  slant: number;
-  details: Array<{
-    character: string;
-    similarityScore: number;
-    notes: string;
-  }>;
-  strokeAnalysis: any;
-  gripAnalysis: any;
-  baselineAnalysis: any;
-  spacingAnalysis: any;
-  pressureAnalysis: any;
-  formationAnalysis: any;
-  characterDetails: any;
 }
 
 export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
@@ -44,7 +23,6 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
         try {
           const record = await getAnalysisById(analysisId);
           if (record) {
-            // Type assertion to ensure TypeScript knows this is an AnalysisRecord
             const typedRecord = record as AnalysisRecord;
             
             setAnalysisData({
@@ -113,7 +91,6 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
   }
 
   if (!analysisData) {
-    // If no analysis ID was provided, use mock data for display
     return (
       <div className="max-w-4xl mx-auto text-center py-8">
         <h2 className="text-2xl font-bold mb-4">No Analysis Data</h2>
@@ -164,33 +141,7 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex flex-col md:flex-row gap-6 mb-8">
-        <div className="w-full md:w-1/2">
-          <h3 className="text-lg font-medium mb-2">Your Handwriting Sample</h3>
-          <div className="bg-muted rounded-md overflow-hidden">
-            <img 
-              src={analysisData.imageUrl} 
-              alt="Your handwriting sample" 
-              className="w-full h-auto object-contain max-h-[300px]"
-            />
-          </div>
-        </div>
-        
-        <div className="w-full md:w-1/2">
-          <h3 className="text-lg font-medium mb-2">Compared with {analysisData.comparisonTarget}</h3>
-          <div className="bg-muted rounded-md h-[300px] flex items-center justify-center p-4">
-            {analysisData.comparisonTarget === "Custom Image" ? (
-              <p className="text-muted-foreground">Custom comparison image</p>
-            ) : (
-              <p className={`text-center text-lg font-${analysisData.comparisonTarget.toLowerCase().includes('times') ? 'times' : 
-                analysisData.comparisonTarget.toLowerCase().includes('arial') ? 'arial' :
-                analysisData.comparisonTarget.toLowerCase().includes('calibri') ? 'calibri' : 'helvetica'}`}>
-                The quick brown fox jumps over the lazy dog
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+      <HandwritingSamples analysisData={analysisData} />
       
       <Tabs defaultValue="technical" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8">
@@ -208,25 +159,7 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
         </TabsContent>
 
         <TabsContent value="formation">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ascenders & Descenders Analysis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Ascenders</h3>
-                  {renderAnalysisSection("Ascender Formation", analysisData.formationAnalysis.ascenders, 
-                    <Pen className="h-5 w-5" />)}
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Descenders</h3>
-                  {renderAnalysisSection("Descender Formation", analysisData.formationAnalysis.descenders, 
-                    <Pen className="h-5 w-5" />)}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <FormationAnalysis formationAnalysis={analysisData.formationAnalysis} />
         </TabsContent>
 
         <TabsContent value="improve">
@@ -241,7 +174,6 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
               </p>
 
               <div className="space-y-8">
-                {/* Priority Areas - Find the lowest two scores */}
                 {(() => {
                   const categories = [
                     { name: "Character Spacing", key: "characterSpacing", score: analysisData.spacingAnalysis.letterSpacing },
@@ -279,7 +211,6 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
                   );
                 })()}
 
-                {/* Daily Practice Routine */}
                 <div>
                   <h3 className="text-md font-semibold mb-3">Daily Practice Routine</h3>
                   <ol className="list-decimal pl-5 space-y-2 text-sm">
@@ -290,7 +221,6 @@ export default function AnalysisResult({ analysisId }: AnalysisResultProps) {
                   </ol>
                 </div>
 
-                {/* Additional Resources */}
                 <div>
                   <h3 className="text-md font-semibold mb-3">Recommended Resources</h3>
                   <ul className="list-disc pl-5 space-y-2 text-sm">
