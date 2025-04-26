@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "./ThemeToggle";
@@ -76,6 +76,11 @@ export default function Navbar() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center space-x-2">
+            <img 
+              src="/lovable-uploads/aa82dfae-8d34-412f-b875-304a838a69a5.png" 
+              alt="Script Check Logo" 
+              className="h-8 w-8 mr-2" 
+            />
             <Image className="h-8 w-8 text-scriptGreen" />
             <span className="hidden font-bold sm:inline-block text-xl">Script-Check</span>
           </Link>
