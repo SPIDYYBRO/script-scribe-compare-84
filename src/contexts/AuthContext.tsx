@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    console.log('Setting up auth state listener');
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -178,20 +179,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     setIsLoading(true);
     try {
+      console.log('Starting logout process');
+      
       // Clear any cached data first
       setUser(null);
       setProfile(null);
       setSession(null);
       
+      // Perform the actual signOut operation
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error('Error during signOut:', error);
+        throw error;
+      }
       
-      // Force page reload to clear any cached state
+      console.log('Logout successful, redirecting');
+      
+      // Ensure we force a full page reload to clear any browser state
+      // This is critical for consistent behavior across environments
       window.location.href = '/';
+      
+      // Show success message
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account."
+      });
     } catch (error) {
       console.error('Error logging out:', error);
-      throw error;
-    } finally {
+      
+      // Show error message
+      toast({
+        title: "Logout failed",
+        description: "There was a problem logging out. Please try again.",
+        variant: "destructive"
+      });
+      
       setIsLoading(false);
     }
   };

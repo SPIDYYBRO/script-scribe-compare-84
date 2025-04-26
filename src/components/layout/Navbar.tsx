@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,6 @@ import { useToast } from "@/hooks/use-toast";
 export default function Navbar() {
   const { user, profile, logout } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -37,22 +35,30 @@ export default function Navbar() {
     if (isLoggingOut) return;
     
     try {
+      console.log('Navbar: Starting logout process');
       setIsLoggingOut(true);
+      
+      // Show loading toast
       toast({
         title: "Logging out",
         description: "Please wait while we log you out..."
       });
       
+      // Call the logout function from AuthContext
       await logout();
       
-      // Success toast will be shown after redirect/reload
+      // Note: We don't need to show success toast here as the page will reload
+      // and the toast would be lost. The AuthContext's logout function handles this.
     } catch (error) {
-      console.error(error);
+      console.error('Navbar: Error during logout:', error);
+      
+      // Show error toast
       toast({
         title: "Logout failed",
         description: "There was a problem logging out. Please try again.",
         variant: "destructive"
       });
+      
       setIsLoggingOut(false);
     }
   };
@@ -138,7 +144,11 @@ export default function Navbar() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut} className="flex items-center gap-2 cursor-pointer">
+                <DropdownMenuItem 
+                  onClick={handleLogout} 
+                  disabled={isLoggingOut} 
+                  className="flex items-center gap-2 cursor-pointer text-red-500 hover:text-red-600"
+                >
                   {isLoggingOut ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
@@ -177,7 +187,7 @@ export default function Navbar() {
             ))}
             <Button 
               variant="ghost" 
-              className="flex items-center gap-3 justify-start p-2 rounded-md w-full text-left font-normal hover:bg-muted"
+              className="flex items-center gap-3 justify-start p-2 rounded-md w-full text-left font-normal hover:bg-muted text-red-500"
               onClick={handleLogout}
               disabled={isLoggingOut}
             >
