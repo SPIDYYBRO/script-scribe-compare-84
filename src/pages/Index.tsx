@@ -57,9 +57,9 @@ export default function Index() {
                 <div className="relative bg-white p-6 border rounded-lg shadow-lg">
                   <div className="aspect-video w-full bg-muted rounded-md overflow-hidden flex items-center justify-center">
                     <img 
-                      src="/placeholder.svg" 
-                      alt="Handwriting analysis preview" 
-                      className="w-full h-full object-cover opacity-90"
+                      src="/lovable-uploads/7822716d-b737-440b-9b4c-05d773e91b04.png" 
+                      alt="Child practicing handwriting" 
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="mt-4 space-y-2">
