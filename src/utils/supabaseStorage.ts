@@ -12,8 +12,8 @@ export const uploadImage = async (file: File, onProgress?: (progress: number) =>
     // Report initial progress
     onProgress && onProgress(10);
     
-    // Only resize if it's an image
-    const resizedFile = file.type.startsWith('image/') ? 
+    // Only resize if it's an image and larger than 1MB
+    const resizedFile = file.type.startsWith('image/') && file.size > 1024 * 1024 ? 
       await resizeImageIfNeeded(file, onProgress) : 
       file;
     
@@ -24,23 +24,17 @@ export const uploadImage = async (file: File, onProgress?: (progress: number) =>
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${fileName}`;
 
-    // Add timeout handling
-    const uploadPromise = supabase.storage
-      .from('handwriting-samples')
-      .upload(filePath, resizedFile, {
-        cacheControl: '3600',
-        upsert: true
-      });
-    
-    // Create a timeout promise
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Upload timed out after 30 seconds')), 30000);
-    });
-    
-    // Race the upload against the timeout
+    // Upload with a shorter timeout
     const { data, error } = await Promise.race([
-      uploadPromise,
-      timeoutPromise.then(() => Promise.reject(new Error('Upload timed out')))
+      supabase.storage
+        .from('handwriting-samples')
+        .upload(filePath, resizedFile, {
+          cacheControl: '3600',
+          upsert: true
+        }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Upload timed out after 15 seconds')), 15000)
+      )
     ]) as any;
 
     // Report progress after upload completes
@@ -80,7 +74,7 @@ const resizeImageIfNeeded = async (file: File, onProgress?: (progress: number) =
   // Calculate new dimensions (maintain aspect ratio)
   let width = loadedImg.width;
   let height = loadedImg.height;
-  const maxDimension = 1024; // Reduced for faster processing
+  const maxDimension = 800; // Reduced for faster processing
 
   if (width > height && width > maxDimension) {
     height = Math.round((height * maxDimension) / width);
@@ -107,7 +101,7 @@ const resizeImageIfNeeded = async (file: File, onProgress?: (progress: number) =
     canvas.toBlob((b) => {
       if (b) resolve(b);
       else resolve(new Blob([]));
-    }, file.type, 0.8); // Reduced quality for faster upload
+    }, file.type, 0.7); // Reduced quality for faster upload
   });
   
   return new File([blob], file.name, { type: file.type });

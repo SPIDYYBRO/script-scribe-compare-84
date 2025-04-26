@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import ThemeToggle from "./ThemeToggle";
@@ -11,7 +11,8 @@ import {
   Settings, 
   Menu, 
   X,
-  LogOut
+  LogOut,
+  Loader2
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -22,21 +23,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Navbar() {
   const { user, profile, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
     try {
-      await logout();
+      setIsLoggingOut(true);
       toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account."
+        title: "Logging out",
+        description: "Please wait while we log you out..."
       });
+      
+      await logout();
+      
+      // Success toast will be shown after redirect/reload
     } catch (error) {
       console.error(error);
       toast({
@@ -44,6 +53,7 @@ export default function Navbar() {
         description: "There was a problem logging out. Please try again.",
         variant: "destructive"
       });
+      setIsLoggingOut(false);
     }
   };
 
@@ -128,9 +138,13 @@ export default function Navbar() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer">
-                  <LogOut className="h-4 w-4" />
-                  <span>Log out</span>
+                <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut} className="flex items-center gap-2 cursor-pointer">
+                  {isLoggingOut ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
+                  <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -165,9 +179,14 @@ export default function Navbar() {
               variant="ghost" 
               className="flex items-center gap-3 justify-start p-2 rounded-md w-full text-left font-normal hover:bg-muted"
               onClick={handleLogout}
+              disabled={isLoggingOut}
             >
-              <LogOut className="h-5 w-5" />
-              Log out
+              {isLoggingOut ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <LogOut className="h-5 w-5" />
+              )}
+              {isLoggingOut ? "Logging out..." : "Log out"}
             </Button>
           </nav>
         </div>
