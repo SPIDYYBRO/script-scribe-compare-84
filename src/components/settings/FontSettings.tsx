@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFont, FontChoice } from "@/contexts/FontContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,7 +12,13 @@ export default function FontSettings() {
     setFont(value);
     toast({
       title: "Font updated",
-      description: `Default font has been changed to ${value === 'times' ? 'Times New Roman' : value === 'arial' ? 'Arial' : value === 'calibri' ? 'Calibri' : 'Helvetica'}.`,
+      description: `Default font has been changed to ${
+        value === 'times' ? 'Times New Roman' : 
+        value === 'arial' ? 'Arial' : 
+        value === 'calibri' ? 'Calibri' : 
+        value === 'helvetica' ? 'Helvetica' : 
+        'Lucida Handwriting'
+      }.`,
     });
   };
   
@@ -56,6 +61,13 @@ export default function FontSettings() {
             <RadioGroupItem value="helvetica" id="helvetica" />
             <Label htmlFor="helvetica" className="font-helvetica text-lg">
               Helvetica
+            </Label>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <RadioGroupItem value="lucida" id="lucida" />
+            <Label htmlFor="lucida" className="font-lucida text-lg">
+              Lucida Handwriting
             </Label>
           </div>
         </RadioGroup>

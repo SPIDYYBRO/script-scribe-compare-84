@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,6 +62,7 @@ export default {
         'arial': ['Arial', 'sans-serif'],
         'calibri': ['Calibri', 'sans-serif'],
         'helvetica': ['Helvetica', 'sans-serif'],
+        'lucida': ['"Lucida Handwriting"', 'cursive'],
       },
       borderRadius: {
         lg: "var(--radius)",

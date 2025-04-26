@@ -7,6 +7,16 @@ interface HandwritingSamplesProps {
 }
 
 const HandwritingSamples = ({ analysisData }: HandwritingSamplesProps) => {
+  const getFontClass = (target: string) => {
+    const targetLower = target.toLowerCase();
+    if (targetLower.includes('times')) return 'font-times';
+    if (targetLower.includes('arial')) return 'font-arial';
+    if (targetLower.includes('calibri')) return 'font-calibri';
+    if (targetLower.includes('helvetica')) return 'font-helvetica';
+    if (targetLower.includes('lucida')) return 'font-lucida';
+    return '';
+  };
+
   return (
     <div className="flex flex-col md:flex-row gap-6 mb-8">
       <div className="w-full md:w-1/2">
@@ -26,9 +36,7 @@ const HandwritingSamples = ({ analysisData }: HandwritingSamplesProps) => {
           {analysisData.comparisonTarget === "Custom Image" ? (
             <p className="text-muted-foreground">Custom comparison image</p>
           ) : (
-            <p className={`text-center text-lg font-${analysisData.comparisonTarget.toLowerCase().includes('times') ? 'times' : 
-              analysisData.comparisonTarget.toLowerCase().includes('arial') ? 'arial' :
-              analysisData.comparisonTarget.toLowerCase().includes('calibri') ? 'calibri' : 'helvetica'}`}>
+            <p className={`text-center text-lg ${getFontClass(analysisData.comparisonTarget)}`}>
               The quick brown fox jumps over the lazy dog
             </p>
           )}

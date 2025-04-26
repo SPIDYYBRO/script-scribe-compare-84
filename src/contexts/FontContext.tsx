@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
-export type FontChoice = 'times' | 'arial' | 'calibri' | 'helvetica';
+export type FontChoice = 'times' | 'arial' | 'calibri' | 'helvetica' | 'lucida';
 
 interface FontContextType {
   font: FontChoice;
@@ -15,7 +15,8 @@ const fontNames = {
   times: 'Times New Roman',
   arial: 'Arial',
   calibri: 'Calibri',
-  helvetica: 'Helvetica'
+  helvetica: 'Helvetica',
+  lucida: 'Lucida Handwriting' // New font name
 };
 
 export function FontProvider({ children }: { children: React.ReactNode }) {
