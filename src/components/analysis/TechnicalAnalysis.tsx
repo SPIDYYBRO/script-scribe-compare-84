@@ -111,7 +111,7 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
                   </AccordionTrigger>
                   <AccordionContent>
                     <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                      {data.strengths && data.strengths.map((item: string, i: number) => (
+                      {data.strengths && Array.isArray(data.strengths) && data.strengths.map((item: string, i: number) => (
                         <li key={i}>{item}</li>
                       ))}
                     </ul>
@@ -129,7 +129,7 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
                   </AccordionTrigger>
                   <AccordionContent>
                     <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                      {data.weaknesses && data.weaknesses.map((item: string, i: number) => (
+                      {data.weaknesses && Array.isArray(data.weaknesses) && data.weaknesses.map((item: string, i: number) => (
                         <li key={i}>{item}</li>
                       ))}
                     </ul>
@@ -147,7 +147,7 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
                   </AccordionTrigger>
                   <AccordionContent>
                     <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                      {data.recommendations && data.recommendations.map((item: string, i: number) => (
+                      {data.recommendations && Array.isArray(data.recommendations) && data.recommendations.map((item: string, i: number) => (
                         <li key={i}>{item}</li>
                       ))}
                     </ul>
