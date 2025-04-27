@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -12,7 +11,6 @@ interface ImprovementPlanProps {
 }
 
 const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
-  // Calculate all metrics for prioritizing improvements
   const calculateMetrics = () => {
     const metrics = [
       { name: "Character Spacing", key: "characterSpacing", score: analysisData.spacingAnalysis.letterSpacing },
@@ -85,7 +83,8 @@ const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
   const metrics = calculateMetrics();
   const priorityAreas = metrics.slice(0, 3); // Top 3 weakest areas
   
-  // Get improvement strengths and weaknesses
+  const overallScore = Math.round(metrics.reduce((acc, curr) => acc + curr.score, 0) / metrics.length);
+  
   const strengths = analysisData.overallAssessment?.strengths || [
     "Good baseline consistency on lined paper",
     "Clearly formed letter shapes with personal style",
@@ -110,7 +109,14 @@ const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-amber-500" />
-            <span>Comprehensive Assessment</span>
+            <span>Overall Assessment</span>
+            <span className={`ml-auto text-sm px-3 py-1 rounded-full ${
+              overallScore >= 80 ? "bg-green-100 text-green-800" :
+              overallScore >= 60 ? "bg-yellow-100 text-yellow-800" :
+              "bg-red-100 text-red-800"
+            }`}>
+              Overall Score: {overallScore}%
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -118,7 +124,7 @@ const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
             <div>
               <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                Strengths
+                Current Strengths
               </h3>
               <ul className="list-disc pl-5 space-y-3 text-sm">
                 {strengths.map((strength, i) => (
@@ -130,7 +136,7 @@ const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
             <div>
               <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-red-500" />
-                Areas Needing Improvement
+                Priority Areas Needing Improvement
               </h3>
               <ul className="list-disc pl-5 space-y-3 text-sm">
                 {weaknesses.map((weakness, i) => (
@@ -145,23 +151,27 @@ const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
           <div>
             <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
               <Clock className="h-4 w-4 text-blue-500" />
-              Priority Focus Areas
+              Focused Improvement Areas
             </h3>
             {priorityAreas.map((area, index) => (
               <div key={index} className="mb-6 last:mb-0">
                 <div className="flex justify-between items-center mb-1">
                   <h4 className="text-sm font-medium">{area.name}</h4>
                   <span className={`text-sm px-2 py-0.5 rounded-full ${
-                    area.score < 50 ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"
+                    area.score < 50 ? "bg-red-100 text-red-800" : 
+                    area.score < 70 ? "bg-amber-100 text-amber-800" :
+                    "bg-green-100 text-green-800"
                   }`}>
-                    {area.score < 50 ? "Needs Attention" : "Improving"}
+                    {area.score < 50 ? "Critical Focus Required" : 
+                     area.score < 70 ? "Needs Improvement" :
+                     "Good Progress"}
                   </span>
                 </div>
                 <Progress value={area.score} className="h-2 mb-2" />
                 <Alert className="bg-blue-50 border-blue-100">
                   <Lightbulb className="h-4 w-4 text-amber-500" />
                   <AlertDescription className="text-sm">
-                    <strong>Tip:</strong> {getImprovementTips(area.key, area.score)}
+                    <strong>Improvement Focus:</strong> {getImprovementTips(area.key, area.score)}
                   </AlertDescription>
                 </Alert>
               </div>
@@ -214,7 +224,7 @@ const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
             </div>
             
             <div>
-              <h3 className="text-md font-semibold mb-3">Specific Exercises</h3>
+              <h3 className="text-md font-semibold mb-3">Priority Exercises</h3>
               <ul className="list-disc pl-5 space-y-3 text-sm">
                 {improvementPlan.map((plan, i) => (
                   <li key={i} className="leading-relaxed">{plan}</li>
@@ -223,13 +233,13 @@ const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
             </div>
             
             <div>
-              <h3 className="text-md font-semibold mb-3">Recommended Resources</h3>
+              <h3 className="text-md font-semibold mb-3">Progress Tracking Tips</h3>
               <ul className="list-disc pl-5 space-y-2 text-sm">
-                <li>Use lined paper with guidelines for consistent letter height and spacing</li>
-                <li>Try different pen types to find what works best for your writing style</li>
-                <li>Consider using a light box or tracing paper for initial practice</li>
-                <li>Record your progress by saving dated samples of your handwriting</li>
-                <li>Practice with writing workbooks designed for handwriting improvement</li>
+                <li>Take weekly samples of your handwriting to track improvement</li>
+                <li>Focus on one area at a time, starting with your lowest scoring aspects</li>
+                <li>Use a practice journal to document your progress and challenges</li>
+                <li>Set realistic weekly goals based on your priority areas</li>
+                <li>Schedule regular practice sessions at consistent times</li>
               </ul>
             </div>
           </div>

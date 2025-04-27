@@ -12,8 +12,40 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
   // Extract all the required data and metrics from analysisData
   const { strokeAnalysis, gripAnalysis, baselineAnalysis, spacingAnalysis, pressureAnalysis } = analysisData;
 
+  // Calculate overall technical score
+  const calculateOverallScore = () => {
+    const scores = [
+      strokeAnalysis.quality,
+      gripAnalysis.control,
+      baselineAnalysis.stability,
+      spacingAnalysis.letterSpacing,
+      pressureAnalysis.consistency
+    ];
+    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  };
+
+  const overallScore = calculateOverallScore();
+
   return (
     <div className="space-y-6">
+      <div className="mb-6 p-4 bg-muted rounded-lg">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold">Overall Technical Score</h3>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+            overallScore >= 80 ? "bg-green-100 text-green-800" :
+            overallScore >= 60 ? "bg-yellow-100 text-yellow-800" :
+            "bg-red-100 text-red-800"
+          }`}>
+            {overallScore}%
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {overallScore >= 80 ? "Excellent technical control across all aspects." :
+           overallScore >= 60 ? "Good foundation with room for improvement in specific areas." :
+           "Focus needed on fundamental writing techniques."}
+        </p>
+      </div>
+
       <DetailedAnalysisCard 
         title="Stroke Analysis" 
         icon={<Pen className="h-5 w-5" />}
