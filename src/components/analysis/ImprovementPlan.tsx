@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lightbulb, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { Lightbulb, CheckCircle, AlertCircle, Clock, AlertTriangle } from "lucide-react";
 import { type EnhancedAnalysisData } from './types';
 import { Separator } from '@/components/ui/separator';
 
