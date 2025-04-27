@@ -24,7 +24,7 @@ const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
       { name: "Grip Control", key: "gripControl", score: analysisData.gripAnalysis.control }
     ];
     
-    return metrics.sort((a, b) => a.score - b.score);
+    return metrics.sort((a, b) => a.score - b.score); // Sort by score ascending (worst to best)
   };
 
   const getImprovementTips = (category: string, score: number) => {
@@ -81,7 +81,7 @@ const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
   };
 
   const metrics = calculateMetrics();
-  const priorityAreas = metrics.slice(0, 3); // Top 3 weakest areas
+  const priorityAreas = metrics.filter(area => area.score < 70); // Focus on areas below 70%
   
   const overallScore = Math.round(metrics.reduce((acc, curr) => acc + curr.score, 0) / metrics.length);
   
@@ -146,6 +146,45 @@ const ImprovementPlan = ({ analysisData }: ImprovementPlanProps) => {
             </div>
           </div>
           
+          <Separator className="my-8" />
+          
+          <div>
+            <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              Priority Focus Areas
+            </h3>
+            {priorityAreas.length > 0 ? (
+              <div className="space-y-6">
+                {priorityAreas.map((area, index) => (
+                  <div key={index} className="mb-6 last:mb-0">
+                    <div className="flex justify-between items-center mb-1">
+                      <h4 className="text-sm font-medium">{area.name}</h4>
+                      <span className={`text-sm px-2 py-0.5 rounded-full ${
+                        area.score < 50 ? "bg-red-100 text-red-800" : 
+                        "bg-amber-100 text-amber-800"
+                      }`}>
+                        {area.score < 50 ? "Critical Focus Required" : "Needs Improvement"}
+                      </span>
+                    </div>
+                    <Progress value={area.score} className="h-2 mb-2" />
+                    <Alert className="bg-blue-50 border-blue-100">
+                      <Lightbulb className="h-4 w-4 text-amber-500" />
+                      <AlertDescription className="text-sm">
+                        <strong>Improvement Focus:</strong> {getImprovementTips(area.key, area.score)}
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Alert>
+                <AlertDescription>
+                  All areas are performing above average. Continue practicing to maintain and improve your skills.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+
           <Separator className="my-8" />
           
           <div>

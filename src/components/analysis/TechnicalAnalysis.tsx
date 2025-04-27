@@ -1,8 +1,11 @@
 
 import React from 'react';
 import { type EnhancedAnalysisData } from './types';
-import DetailedAnalysisCard from './DetailedAnalysisCard';
-import { Pen, Grip, Baseline, Square, Ruler } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Check, AlertTriangle, Lightbulb } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface TechnicalAnalysisProps {
   analysisData: EnhancedAnalysisData;
@@ -26,6 +29,97 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
 
   const overallScore = calculateOverallScore();
 
+  const renderAnalysisSection = (title: string, data: any, icon: React.ReactNode) => (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          {icon}
+          <span>{title}</span>
+          <span className={`ml-auto text-xs font-normal px-2 py-1 rounded-full ${
+            averageScore >= 80 ? "bg-green-100 text-green-800" :
+            averageScore >= 60 ? "bg-yellow-100 text-yellow-800" :
+            "bg-red-100 text-red-800"
+          }`}>
+            {Math.round(averageScore)}% {
+              averageScore >= 80 ? "Strong" :
+              averageScore >= 60 ? "Average" :
+              "Needs Work"
+            }
+          </span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {Object.entries(data).filter(([key]) => typeof data[key] === 'number').map(([key, value]) => (
+            <div key={key} className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                <span className="text-sm font-medium">{value}%</span>
+              </div>
+              <Progress value={value as number} className="h-2" />
+            </div>
+          ))}
+
+          <Accordion type="single" collapsible className="w-full mt-4">
+            {data.strengths && data.strengths.length > 0 && (
+              <AccordionItem value="strengths">
+                <AccordionTrigger className="text-sm font-medium text-green-600 hover:text-green-700">
+                  <div className="flex items-center gap-2">
+                    <Check size={16} className="text-green-500" />
+                    Strengths
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                    {data.strengths.map((item: string, i: number) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+            
+            {data.weaknesses && data.weaknesses.length > 0 && (
+              <AccordionItem value="weaknesses">
+                <AccordionTrigger className="text-sm font-medium text-amber-600 hover:text-amber-700">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-amber-500" />
+                    Areas for Improvement
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                    {data.weaknesses.map((item: string, i: number) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+            
+            {data.recommendations && data.recommendations.length > 0 && (
+              <AccordionItem value="recommendations">
+                <AccordionTrigger className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb size={16} className="text-blue-500" />
+                    Recommended Exercises
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                    {data.recommendations.map((item: string, i: number) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+          </Accordion>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       <div className="mb-6 p-4 bg-muted rounded-lg">
@@ -46,79 +140,11 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
         </p>
       </div>
 
-      <DetailedAnalysisCard 
-        title="Stroke Analysis" 
-        icon={<Pen className="h-5 w-5" />}
-        metrics={{
-          quality: strokeAnalysis.quality,
-          consistency: strokeAnalysis.consistency,
-          fluidity: strokeAnalysis.fluidity,
-          direction: strokeAnalysis.direction
-        }}
-        details={strokeAnalysis.details}
-        strengths={strokeAnalysis.strengths}
-        weaknesses={strokeAnalysis.weaknesses}
-        recommendations={strokeAnalysis.recommendations}
-      />
-      
-      <DetailedAnalysisCard 
-        title="Grip Analysis" 
-        icon={<Grip className="h-5 w-5" />}
-        metrics={{
-          pressure: gripAnalysis.pressure,
-          control: gripAnalysis.control,
-          consistency: gripAnalysis.consistency
-        }}
-        details={gripAnalysis.details}
-        strengths={gripAnalysis.strengths}
-        weaknesses={gripAnalysis.weaknesses}
-        recommendations={gripAnalysis.recommendations}
-      />
-      
-      <DetailedAnalysisCard 
-        title="Baseline Analysis" 
-        icon={<Baseline className="h-5 w-5" />}
-        metrics={{
-          stability: baselineAnalysis.stability,
-          angle: baselineAnalysis.angle,
-          consistency: baselineAnalysis.consistency,
-          drift: baselineAnalysis.drift
-        }}
-        details={baselineAnalysis.details}
-        strengths={baselineAnalysis.strengths}
-        weaknesses={baselineAnalysis.weaknesses}
-        recommendations={baselineAnalysis.recommendations}
-      />
-      
-      <DetailedAnalysisCard 
-        title="Spacing Analysis" 
-        icon={<Square className="h-5 w-5" />}
-        metrics={{
-          letterSpacing: spacingAnalysis.letterSpacing,
-          wordSpacing: spacingAnalysis.wordSpacing,
-          lineSpacing: spacingAnalysis.lineSpacing,
-          margins: spacingAnalysis.margins
-        }}
-        details={spacingAnalysis.details}
-        strengths={spacingAnalysis.strengths}
-        weaknesses={spacingAnalysis.weaknesses}
-        recommendations={spacingAnalysis.recommendations}
-      />
-      
-      <DetailedAnalysisCard 
-        title="Pressure Analysis" 
-        icon={<Ruler className="h-5 w-5" />}
-        metrics={{
-          depth: pressureAnalysis.depth,
-          consistency: pressureAnalysis.consistency,
-          variation: pressureAnalysis.variation,
-          control: pressureAnalysis.control
-        }}
-        details={pressureAnalysis.details}
-        strengths={pressureAnalysis.strengths}
-        weaknesses={pressureAnalysis.weaknesses}
-        recommendations={pressureAnalysis.recommendations}
-      />
+      {renderAnalysisSection("Stroke Analysis", strokeAnalysis, <Pen className="h-5 w-5" />)}
+      {renderAnalysisSection("Grip Analysis", gripAnalysis, <Grip className="h-5 w-5" />)}
+      {renderAnalysisSection("Baseline Analysis", baselineAnalysis, <Baseline className="h-5 w-5" />)}
+      {renderAnalysisSection("Spacing Analysis", spacingAnalysis, <Square className="h-5 w-5" />)}
+      {renderAnalysisSection("Pressure Analysis", pressureAnalysis, <Ruler className="h-5 w-5" />)}
     </div>
   );
 };
