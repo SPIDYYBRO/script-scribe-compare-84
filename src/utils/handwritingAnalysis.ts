@@ -22,6 +22,21 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
       "Stroke formation shows " + (generateScore(70, 30) > 65 ? "confident" : "hesitant") + " pen movement",
       "Line quality is " + (generateScore(75, 25) > 70 ? "smooth and controlled" : "somewhat irregular"),
       "Stroke direction maintains " + (generateScore(80, 20) > 75 ? "consistent" : "variable") + " patterns"
+    ],
+    strengths: [
+      "Good control at the start of strokes",
+      "Maintains consistent pressure throughout longer strokes",
+      "Clean line endings with minimal tapering issues"
+    ],
+    weaknesses: [
+      "Occasional hesitation marks at stroke junctions",
+      "Some strokes show tremor when creating curves",
+      "Inconsistent stroke weight between uppercase and lowercase letters"
+    ],
+    recommendations: [
+      "Practice fluid motion exercises focusing on continuous curved lines",
+      "Use guidelines to maintain consistent stroke direction",
+      "Try using different pen types to find the optimal tool for your writing style"
     ]
   };
 
@@ -33,6 +48,21 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
       "Grip pressure indicates " + (generateScore(70, 30) > 65 ? "relaxed" : "tense") + " hand position",
       "Pen control shows " + (generateScore(75, 25) > 70 ? "steady" : "variable") + " handling",
       "Writing rhythm appears " + (generateScore(65, 35) > 60 ? "natural" : "forced")
+    ],
+    strengths: [
+      "Maintains comfortable grip through extended writing",
+      "Good finger positioning allows for flexible movements",
+      "Balanced pressure distribution across the pen"
+    ],
+    weaknesses: [
+      "Occasional tensing of grip during complex letter formations",
+      "Grip position shifts slightly when transitioning between words",
+      "Tendency to hold pen too close to the tip, limiting fluidity"
+    ],
+    recommendations: [
+      "Practice writing with a relaxed grip using the tripod method (thumb, index and middle finger)",
+      "Use ergonomic pen grips to encourage proper finger placement",
+      "Take short breaks during extended writing sessions to prevent grip fatigue"
     ]
   };
 
@@ -45,6 +75,21 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
       "Baseline " + (generateScore(70, 30) > 65 ? "maintains" : "varies in") + " horizontal alignment",
       "Writing angle shows " + (generateScore(75, 25) > 70 ? "consistent" : "variable") + " slant",
       "Line spacing demonstrates " + (generateScore(80, 20) > 75 ? "good" : "irregular") + " control"
+    ],
+    strengths: [
+      "Maintains horizontal alignment across most of the page",
+      "Text rarely drifts above or below the baseline",
+      "Consistent baseline when using lined paper"
+    ],
+    weaknesses: [
+      "Baseline tends to drift upward toward the end of longer lines",
+      "Some lines begin at different heights, affecting overall consistency",
+      "Baseline stability decreases when writing quickly"
+    ],
+    recommendations: [
+      "Practice writing on lined paper with clear baseline guides",
+      "Place a ruler beneath the current line while writing to maintain straightness",
+      "Focus on maintaining eye position at a consistent distance from the paper"
     ]
   };
 
@@ -57,6 +102,21 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
       "Letter spacing shows " + (generateScore(75, 25) > 70 ? "balanced" : "irregular") + " distribution",
       "Word spacing maintains " + (generateScore(70, 30) > 65 ? "consistent" : "variable") + " gaps",
       "Margin alignment is " + (generateScore(80, 20) > 75 ? "well-maintained" : "inconsistent")
+    ],
+    strengths: [
+      "Consistent spacing between similar letter pairs",
+      "Good visual rhythm established through regular word spacing",
+      "Maintains appropriate margins consistently on one side of the page"
+    ],
+    weaknesses: [
+      "Some letter combinations (like 'rn', 'nn') lack sufficient spacing clarity",
+      "Word spacing tends to compress toward the end of lines",
+      "Right margin consistency varies significantly throughout the document"
+    ],
+    recommendations: [
+      "Practice with dotted guideline paper that includes letter-width markings",
+      "Use finger-width spacing as a guide between words",
+      "Draw margin lines before writing to establish clear boundaries"
     ]
   };
 
@@ -69,6 +129,21 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
       "Writing pressure shows " + (generateScore(70, 30) > 65 ? "controlled" : "excessive") + " force",
       "Pressure consistency is " + (generateScore(75, 25) > 70 ? "well-maintained" : "variable"),
       "Stroke weight appears " + (generateScore(65, 35) > 60 ? "balanced" : "inconsistent")
+    ],
+    strengths: [
+      "Maintains readable impressions without page indentation",
+      "Shows good pressure control on downward strokes",
+      "Demonstrates appropriate pressure variation for different letter parts"
+    ],
+    weaknesses: [
+      "Occasional excessive pressure on initial strokes of words",
+      "Pressure inconsistency when forming connecting loops",
+      "Reduced pressure control when writing for extended periods"
+    ],
+    recommendations: [
+      "Practice with pressure-sensitive pens to build awareness",
+      "Experiment with different writing surfaces to find optimal feedback",
+      "Use breathing techniques to reduce tension when writing"
     ]
   };
 
@@ -80,6 +155,21 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
       details: [
         "Ascender height shows " + (generateScore(75, 25) > 70 ? "consistent" : "variable") + " proportion",
         "Vertical alignment is " + (generateScore(70, 30) > 65 ? "well-maintained" : "irregular")
+      ],
+      strengths: [
+        "Maintains proportional ascender heights for most letters",
+        "Good vertical alignment of tall letters across words",
+        "Clear distinction between ascender-containing letters and x-height letters"
+      ],
+      weaknesses: [
+        "Inconsistent height ratio between different ascender letters (like l vs h)",
+        "Some ascenders lean or curve at their peaks",
+        "Occasional merging of ascenders in closely-spaced words"
+      ],
+      recommendations: [
+        "Practice with four-lined guideline paper to establish consistent heights",
+        "Focus on keeping ascenders parallel to each other",
+        "Use tracing exercises to develop muscle memory for proper proportions"
       ]
     },
     descenders: {
@@ -89,6 +179,92 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
       details: [
         "Descender depth maintains " + (generateScore(70, 30) > 65 ? "uniform" : "varying") + " length",
         "Lower alignment shows " + (generateScore(75, 25) > 70 ? "good" : "inconsistent") + " control"
+      ],
+      strengths: [
+        "Good proportional relationship between descenders and x-height",
+        "Maintains consistent descender depth across most instances",
+        "Clear distinction between descender letters and baseline letters"
+      ],
+      weaknesses: [
+        "Some descenders curl or hook unpredictably",
+        "Descender length varies between different letters (g, y, p, q)",
+        "Occasional collision with descenders from the line below"
+      ],
+      recommendations: [
+        "Practice with guidelines that include descender space",
+        "Focus on maintaining straight descenders without hooks unless stylistically intended",
+        "Use consistent line spacing to prevent descender collisions"
+      ]
+    },
+    xHeight: {
+      consistency: generateScore(75, 25),
+      proportion: generateScore(80, 20),
+      details: [
+        "X-height consistency is " + (generateScore(75, 25) > 70 ? "well-maintained" : "variable") + " across text",
+        "Proportional relationship between x-height and overall letter size is " + (generateScore(80, 20) > 75 ? "balanced" : "inconsistent")
+      ],
+      strengths: [
+        "Maintains consistent x-height for most lowercase letters",
+        "Good proportional relationship between x-height and capital letters",
+        "Creates clear visual rhythm through consistent letter bodies"
+      ],
+      weaknesses: [
+        "Some rounded letters (a, o) appear smaller than other x-height letters",
+        "X-height consistency diminishes toward the end of lines or paragraphs",
+        "Occasional vertical compression affects readability of complex letters"
+      ],
+      recommendations: [
+        "Practice with x-height guidelines to establish muscle memory",
+        "Focus on making rounded letters the same height as angular letters",
+        "Use consistent x-height as a foundation before focusing on ascenders/descenders"
+      ]
+    },
+    slant: {
+      angle: generateScore(70, 30),
+      consistency: generateScore(65, 35),
+      details: [
+        "Writing slant averages " + (generateScore(70, 30) > 65 ? "a consistent angle" : "variable angles") + " throughout the text",
+        "Letter alignment follows " + (generateScore(65, 35) > 60 ? "a unified directional trend" : "inconsistent orientation")
+      ],
+      strengths: [
+        "Maintains reasonably consistent slant direction throughout most text",
+        "Similar letters show comparable slant angles when repeated",
+        "Slant contributes to a personal writing style without affecting readability"
+      ],
+      weaknesses: [
+        "Slant angle varies between different letter forms (straight vs. curved letters)",
+        "Inconsistent slant when transitioning between words or after pauses",
+        "Some letters appear to have a contradictory slant to the overall pattern"
+      ],
+      recommendations: [
+        "Practice with slant guide sheets (available as printable templates)",
+        "Position paper at a consistent angle that feels comfortable for your writing hand",
+        "Focus on maintaining parallel slant lines in all downstrokes"
+      ]
+    },
+    letterShapes: {
+      accuracy: generateScore(75, 25),
+      consistency: generateScore(70, 30),
+      distinctiveness: generateScore(65, 35),
+      details: [
+        "Letter form accuracy is " + (generateScore(75, 25) > 70 ? "generally good" : "needing improvement") + " compared to standard forms",
+        "Shape consistency is " + (generateScore(70, 30) > 65 ? "maintained" : "variable") + " when letters repeat",
+        "Letters are " + (generateScore(65, 35) > 60 ? "clearly distinguishable" : "occasionally ambiguous") + " from each other"
+      ],
+      strengths: [
+        "Most letters are immediately recognizable without context",
+        "Maintains consistent letter shapes when the same character repeats",
+        "Distinctive personal style without sacrificing legibility"
+      ],
+      weaknesses: [
+        "Some similar letters (a/o, n/m) lack sufficient distinguishing features",
+        "Letter forms sometimes deteriorate when writing quickly",
+        "Inconsistent formation of complex letter components (e.g., the loop in 'g')"
+      ],
+      recommendations: [
+        "Practice problematic letters individually with slow, deliberate movements",
+        "Focus on the distinguishing features that differentiate similar letters",
+        "Use tracing exercises to build muscle memory for consistent letter shapes"
       ]
     }
   };
@@ -107,6 +283,34 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
     };
   });
 
+  // Generate overall assessment
+  const overallAssessment = {
+    strengths: [
+      "Good baseline consistency on lined paper",
+      "Clearly formed letter shapes with personal style",
+      "Appropriate spacing between words enhancing readability",
+      "Well-proportioned ascenders and descenders"
+    ],
+    weaknesses: [
+      "Variable pressure control affecting consistency",
+      "Inconsistent slant angle throughout longer texts",
+      "Letter spacing issues with certain character combinations",
+      "X-height consistency diminishes when writing quickly"
+    ],
+    priorities: [
+      "Focus first on developing consistent slant angle",
+      "Improve pressure control through targeted exercises",
+      "Practice maintaining consistent x-height across all letters",
+      "Work on even spacing between problematic letter pairs"
+    ],
+    improvementPlan: [
+      "Use slant guides for 10 minutes daily to establish muscle memory",
+      "Practice with pressure-sensitive pens to develop better control",
+      "Implement daily drills focusing on maintaining consistent x-height",
+      "Slow down writing pace initially to focus on form over speed"
+    ]
+  };
+
   return {
     similarityScore: overallSimilarityScore,
     strokeAnalysis,
@@ -115,7 +319,8 @@ export const analyzeHandwriting = (handwritingSample: string, comparisonType: st
     spacingAnalysis,
     pressureAnalysis,
     formationAnalysis,
-    characterDetails: details.sort((a, b) => a.character.localeCompare(b.character))
+    characterDetails: details.sort((a, b) => a.character.localeCompare(b.character)),
+    overallAssessment
   };
 };
 
@@ -139,4 +344,3 @@ const generateDetailedNotes = (letter: string, score: number) => {
 export const generateAnalysisId = () => {
   return 'analysis-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 };
-
