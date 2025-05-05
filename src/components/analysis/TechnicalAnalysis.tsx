@@ -41,6 +41,13 @@ interface TechnicalAnalysisProps {
   analysisData: EnhancedAnalysisData;
 }
 
+interface AnalysisSectionData {
+  [key: string]: number | string | string[] | undefined;
+  strengths?: string[];
+  weaknesses?: string[];
+  recommendations?: string[];
+}
+
 const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
   // Extract all the required data and metrics from analysisData
   const { strokeAnalysis, gripAnalysis, baselineAnalysis, spacingAnalysis, pressureAnalysis } = analysisData;
@@ -59,7 +66,7 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
 
   const overallScore = calculateOverallScore();
 
-  const renderAnalysisSection = (title: string, data: any, icon: React.ReactNode) => {
+  const renderAnalysisSection = (title: string, data: AnalysisSectionData, icon: React.ReactNode) => {
     // Calculate average score for this section
     const numericValues = Object.entries(data)
       .filter(([key, value]) => typeof value === 'number' && !['id', 'userId', 'createdAt', 'updatedAt'].includes(key))
@@ -90,15 +97,17 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {Object.entries(data).filter(([key]) => typeof data[key] === 'number').map(([key, value]) => (
-              <div key={key} className="space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                  <span className="text-sm font-medium">{value}%</span>
+            {Object.entries(data)
+              .filter(([key]) => typeof data[key] === 'number')
+              .map(([key, value]) => (
+                <div key={key} className="space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                    <span className="text-sm font-medium">{value}%</span>
+                  </div>
+                  <Progress value={value as number} className="h-2" />
                 </div>
-                <Progress value={value as number} className="h-2" />
-              </div>
-            ))}
+              ))}
 
             <Accordion type="single" collapsible className="w-full mt-4">
               {data.strengths && Array.isArray(data.strengths) && data.strengths.length > 0 && (
@@ -111,9 +120,9 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
                   </AccordionTrigger>
                   <AccordionContent>
                     <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                      {Array.isArray(data.strengths) ? data.strengths.map((item: string, i: number) => (
+                      {data.strengths.map((item, i) => (
                         <li key={i}>{item}</li>
-                      )) : null}
+                      ))}
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
@@ -129,9 +138,9 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
                   </AccordionTrigger>
                   <AccordionContent>
                     <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                      {Array.isArray(data.weaknesses) ? data.weaknesses.map((item: string, i: number) => (
+                      {data.weaknesses.map((item, i) => (
                         <li key={i}>{item}</li>
-                      )) : null}
+                      ))}
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
@@ -147,9 +156,9 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
                   </AccordionTrigger>
                   <AccordionContent>
                     <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                      {Array.isArray(data.recommendations) ? data.recommendations.map((item: string, i: number) => (
+                      {data.recommendations.map((item, i) => (
                         <li key={i}>{item}</li>
-                      )) : null}
+                      ))}
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
