@@ -4,11 +4,11 @@ import { type EnhancedAnalysisData } from './types';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Check, AlertTriangle, Lightbulb, Pen, Ruler } from "lucide-react";
+import { AlertTriangle, Check, Lightbulb, Pen, Ruler } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 // Custom icon components for missing lucide icons
-const Grip = (props: any) => (
+const Grip = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <circle cx="12" cy="5" r="1"/>
     <circle cx="19" cy="5" r="1"/>
@@ -22,7 +22,7 @@ const Grip = (props: any) => (
   </svg>
 );
 
-const Baseline = (props: any) => (
+const Baseline = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M4 20h16"/>
     <path d="M8 5v10"/>
@@ -31,7 +31,7 @@ const Baseline = (props: any) => (
   </svg>
 );
 
-const Square = (props: any) => (
+const Square = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
   </svg>
@@ -101,7 +101,7 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
             ))}
 
             <Accordion type="single" collapsible className="w-full mt-4">
-              {data.strengths && data.strengths.length > 0 && (
+              {data.strengths && Array.isArray(data.strengths) && data.strengths.length > 0 && (
                 <AccordionItem value="strengths">
                   <AccordionTrigger className="text-sm font-medium text-green-600 hover:text-green-700">
                     <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
                 </AccordionItem>
               )}
               
-              {data.weaknesses && data.weaknesses.length > 0 && (
+              {data.weaknesses && Array.isArray(data.weaknesses) && data.weaknesses.length > 0 && (
                 <AccordionItem value="weaknesses">
                   <AccordionTrigger className="text-sm font-medium text-amber-600 hover:text-amber-700">
                     <div className="flex items-center gap-2">
@@ -137,7 +137,7 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
                 </AccordionItem>
               )}
               
-              {data.recommendations && data.recommendations.length > 0 && (
+              {data.recommendations && Array.isArray(data.recommendations) && data.recommendations.length > 0 && (
                 <AccordionItem value="recommendations">
                   <AccordionTrigger className="text-sm font-medium text-blue-600 hover:text-blue-700">
                     <div className="flex items-center gap-2">
