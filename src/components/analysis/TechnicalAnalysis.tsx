@@ -90,7 +90,7 @@ const TechnicalAnalysis = ({ analysisData }: TechnicalAnalysisProps) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {Object.entries(data).filter(([key, value]) => typeof data[key] === 'number').map(([key, value]) => (
+            {Object.entries(data).filter(([key]) => typeof data[key] === 'number').map(([key, value]) => (
               <div key={key} className="space-y-1">
                 <div className="flex justify-between">
                   <span className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
