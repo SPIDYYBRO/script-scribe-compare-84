@@ -7,6 +7,7 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
+    // Configure server to be accessible from other devices on the network
     host: "0.0.0.0", // Listen on all network interfaces
     port: 8080,
     open: true, // Automatically open in browser
